@@ -39,7 +39,7 @@ export class TransitionsController {
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
-    console.log(user);
+   
     if (user.sim_provider === SimProviderEnum.SYRIATEL)
       return await this.syriatelService.recharge(
         userMobile,
@@ -63,7 +63,7 @@ export class TransitionsController {
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get('points')
   async getUserPoints(@GetCurrentUser() reqUser: any) {
-    const userId = reqUser.sub;
+    const userId = reqUser.userId;
     const user = await this.userService.getUserPoints(userId);
     return {
       data: {

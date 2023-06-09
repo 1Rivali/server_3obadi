@@ -114,7 +114,7 @@ export class AuthService {
   // helper methods
 
   private genToken(
-    userID: string,
+    userID: number,
     mobile: string,
     role: string,
     is_verified: boolean,

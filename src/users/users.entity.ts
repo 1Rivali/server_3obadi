@@ -22,8 +22,8 @@ export enum SimProviderEnum {
 
 @Entity({ name: 'users' })
 export class UserEntity {
-  @PrimaryGeneratedColumn('uuid')
-  readonly user_id: string;
+  @PrimaryGeneratedColumn()
+  readonly user_id: number;
 
   @Column()
   name: string;
@@ -37,7 +37,7 @@ export class UserEntity {
 
   @Exclude()
   @Column({ default: 0 })
-  is_post_paid: boolean;
+  is_pre_paid: boolean;
 
   @Exclude()
   @Column()

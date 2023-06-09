@@ -25,7 +25,7 @@ export class AwardService {
     throw new HttpException('Award not found', HttpStatus.BAD_REQUEST);
   }
 
-  async findAwardById(awardId: string): Promise<AwardEntity> {
+  async findAwardById(awardId: number): Promise<AwardEntity> {
     const award: AwardEntity = await this.awardRepo.findOne({
       where: {
         award_id: awardId,
@@ -39,7 +39,7 @@ export class AwardService {
     const awards: AwardEntity[] = await this.awardRepo.find({
       select: { award_value: true, percentage: true },
     });
-    console.log(awards);
+   
     if (awards) return awards;
     throw new InternalServerErrorException();
   }

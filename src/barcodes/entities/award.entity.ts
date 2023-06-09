@@ -11,8 +11,8 @@ export enum AwardTypeEnum {
 @Entity({ name: 'awards' })
 export class AwardEntity {
   @Exclude()
-  @PrimaryGeneratedColumn('uuid')
-  readonly award_id: string;
+  @PrimaryGeneratedColumn()
+  readonly award_id: number;
 
   @Exclude()
   @Column({ type: 'enum', enum: AwardTypeEnum, nullable: false })

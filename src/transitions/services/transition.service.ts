@@ -10,7 +10,7 @@ export class TransitionService {
     private readonly transitionRepo: Repository<TransitionEntity>,
   ) {}
 
-  async fetchPreviousTransitions(userId: string): Promise<TransitionEntity[]> {
+  async fetchPreviousTransitions(userId: number): Promise<TransitionEntity[]> {
     const transitionsList = [];
     const transitions:TransitionEntity[] = await this.transitionRepo.find({select:{amount:{amount:true}, sent_at:true},
       where: { user: { user_id: userId }, is_accepted: true, is_success: true },

@@ -22,7 +22,7 @@ export class UsersService {
     return user;
   }
 
-  async findUserById(userId: string): Promise<UserEntity | undefined> {
+  async findUserById(userId: number): Promise<UserEntity | undefined> {
     let user = this.usersRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException();
     return user;
@@ -30,7 +30,7 @@ export class UsersService {
   async createUser(
     authDto: AuthDto,
     simProvider: SimProviderEnum,
-    isPostPaid: boolean,
+    isPrePaid: boolean,
   ): Promise<UserEntity> {
     const user = await this.usersRepo.findOne({
       where: { mobile: authDto.mobile },
@@ -46,13 +46,13 @@ export class UsersService {
       mobile: authDto.mobile,
       password: hashedPassword,
       sim_provider: simProvider,
-      is_post_paid: isPostPaid,
+      is_pre_paid: isPrePaid,
     });
 
     return this.usersRepo.save(createdUser);
   }
 
-  async updateUserPassword(userId: string, password: string) {
+  async updateUserPassword(userId: number, password: string) {
     const hashedPassword = await hash(password);
     const updatedUser = await this.usersRepo.update(
       { user_id: userId },
@@ -60,21 +60,21 @@ export class UsersService {
     );
   }
 
-  async verifyUser(userId: string) {
+  async verifyUser(userId: number) {
     const user = await this.usersRepo.update(
       { user_id: userId },
       { is_verified: true },
     );
   }
 
-  async updateUserPoints(userId: string, points: number) {
+  async updateUserPoints(userId: number, points: number) {
     const updateUser = await this.usersRepo.update(
       { user_id: userId },
       { points },
     );
     return updateUser;
   }
-  async getUserPoints(userId: string) {
+  async getUserPoints(userId: number) {
     const user = await this.usersRepo.findOne({
       select: { points: true },
       where: { user_id: userId },

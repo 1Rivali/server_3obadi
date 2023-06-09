@@ -168,7 +168,7 @@ export class VerificationsService {
   // helper functions
   private async sendSms(sms: Sms) {
     const fixedMobile = fixMobile(sms.mobile);
-
+    console.log("Syriatel", fixedMobile);
     const agent = new https.Agent({
       rejectUnauthorized: false,
     });
@@ -180,13 +180,14 @@ export class VerificationsService {
       };
 
       const syriatelRes = await axios(SyriatelConfig);
-      
-      if (typeof parseInt(syriatelRes.data) === typeof Number)
+      console.log(syriatelRes.data);
+      if (Number.isInteger(parseInt(syriatelRes.data, 10)))
         return { statusCode: 200, message: 'Success' };
 
       throw new InternalServerErrorException();
     }
     if (sms.simProvider === SimProviderEnum.MTN) {
+      console.log("MTN", sms.mobile);
       var mtnConfig = {
         method: 'post',
         url: `https://services.mtnsyr.com:7443/general/MTNSERVICES/ConcatenatedSender.aspx?User=oci208&Pass=dabo121018&From=3obadi&Gsm=${sms.mobile}&Msg=${sms.code}&Lang=1`,
@@ -196,7 +197,7 @@ export class VerificationsService {
       };
       try {
         const mtnRes = await axios(mtnConfig);
-        console.log(mtnRes.data)
+        console.log(mtnRes);
         if (mtnRes.status === 200)
           return { statusCode: 200, message: 'Success' };
       } catch (error) {

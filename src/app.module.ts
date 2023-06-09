@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -17,6 +17,7 @@ import { TransitionEntity } from './transitions/entities/transitions.entity';
 import { AmountTypesEntity } from './transitions/entities/amount-types.entity';
 import { AgentsModule } from './agents/agents.module';
 import { AgentsEntity } from './agents/entities/agents.entity';
+import { LoggerMiddleware } from './utils/logger/logger.middleware';
 
 @Module({
   imports: [
@@ -51,4 +52,8 @@ import { AgentsEntity } from './agents/entities/agents.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

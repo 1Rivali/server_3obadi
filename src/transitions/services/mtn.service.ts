@@ -30,7 +30,7 @@ export class MtnService {
   ) {
     this.bankId = this.configService.get<string>('MTN_BANK_ID');
     this.mtnPassword = this.configService.get<string>('MTN_PASSWORD');
-    this.token="";
+    this.token=" ";
   }
   async getToken() {
     const data = new URLSearchParams();
@@ -51,13 +51,13 @@ export class MtnService {
       data: data,
       httpsAgent: agent,
     };
-    console.log("dahhh");
+    
 
     const response = await axios(config);
-    console.log(response.data);
+    
     if (response.data.errorDesc === 'Operation Success') {
       this.token = response.data.data.token;
-      console.log("dah");
+    
     }
   }
 
@@ -84,25 +84,25 @@ export class MtnService {
     };
     try {
       let response = await axios(config);
-      console.log(response.data);
+      
       if (response.data.error === '100009') {
         await this.getToken();
         response = await axios(config);
       }
       if (response.data.data.gsmType === 'pre') {
-        return false;
+        return true;
       }
-      return true;
+      return false;
     } catch (error) {
-      console.log(error)
+      
       throw new InternalServerErrorException();
     }
   }
 
   async recharge(mobile: string, amount: number, user: UserEntity) {
-    if (!this.token) {
+   
       await this.getToken();
-    }
+    
     const date = new Date();
     let dateString: string = 'YYYYMMDDhhmmss';
     dateString = dateString.replace(
@@ -120,7 +120,7 @@ export class MtnService {
     });
     if (!amountType)
       throw new HttpException('Invalid amount type', HttpStatus.BAD_REQUEST);
-    console.log("$$$",amountType);
+    
     const transition =  this.transitionRepo.create({
       amount: amountType,
       user: user,
@@ -128,9 +128,8 @@ export class MtnService {
     });
     
     await this.transitionRepo.save(transition);
-    const transitionId: string = 'oba' + transition.transition_id;
-    console.log(transitionId);
-    console.log("------------------",transition);
+    const transitionId: string = 'obaa' + transition.transition_id;
+   
     const newPoints: number = user.points - amount;
     if (newPoints < 0)
       throw new HttpException(
@@ -143,7 +142,7 @@ export class MtnService {
       'inputObj',
       `{"bankId":"${this.bankId}","password":"${this.mtnPassword}","gsmNumber":"${mobile}" ,"amount":"${amount}" ,"transactionId":"${transitionId}" ,"transactionDate":"${dateString}",}`,
     );
-    if (user.is_post_paid === false) {
+    if (user.is_pre_paid === false) {
       var config = {
         method: 'post',
         url: 'https://Services.mtnsyr.com:9090/rechargePrepaidLine',
@@ -154,7 +153,7 @@ export class MtnService {
         data: data,
       };
       let response = await axios(config);
-      
+     
       if (response.data.result === 'True') {
         await this.transitionRepo.update(
           {
@@ -165,10 +164,10 @@ export class MtnService {
         await this.userService.updateUserPoints(user.user_id, newPoints);
         return { amount };
       }
-      console.log(response.data);
+      
       throw new InternalServerErrorException();
     }
-    if (user.is_post_paid === true) {
+    if (user.is_pre_paid === true) {
       var config = {
         method: 'post',
         url: 'https://Services.mtnsyr.com:9090/payPostpaidInvoice',

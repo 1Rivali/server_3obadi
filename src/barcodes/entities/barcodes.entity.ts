@@ -13,19 +13,12 @@ import { AwardEntity } from './award.entity';
 import { Exclude } from 'class-transformer';
 import { AgentsEntity } from 'src/agents/entities/agents.entity';
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-}
-export enum SimProviderEnum {
-  SYRIATEL = 'sy',
-  MTN = 'mtn',
-}
+
 
 @Entity({ name: 'barcodes' })
 export class BarcodesEntity {
   @Exclude()
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   readonly barcode_id: string;
 
   @ManyToOne(() => UserEntity, (user) => user.barcodes, { nullable: true })

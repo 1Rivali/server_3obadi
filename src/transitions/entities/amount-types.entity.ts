@@ -9,8 +9,8 @@ import { TransitionEntity } from './transitions.entity';
 
 @Entity('amount_types')
 export class AmountTypesEntity {
-  @PrimaryGeneratedColumn('uuid')
-  amount_type_id: string;
+  @PrimaryGeneratedColumn()
+  amount_type_id: number;
 
   @Column({ unique: true })
   amount: number;

@@ -15,8 +15,8 @@ import {
 
 @Entity({ name: 'mobile_verifications' })
 export class MobileVerificationEntity {
-  @PrimaryGeneratedColumn('uuid')
-  readonly verification_id: string;
+  @PrimaryGeneratedColumn()
+  readonly verification_id: number;
 
   @OneToOne(() => UserEntity, (user) => user.verifications, {
     onDelete: 'CASCADE',

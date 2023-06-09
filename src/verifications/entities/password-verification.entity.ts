@@ -11,8 +11,8 @@ import {
 
 @Entity({ name: 'password_verifications' })
 export class PasswordVerificationEntity {
-  @PrimaryGeneratedColumn('uuid')
-  readonly verification_id: string;
+  @PrimaryGeneratedColumn()
+  readonly verification_id: number;
 
   @ManyToOne(() => UserEntity, (user) => user.verifications, {
     onDelete: 'CASCADE',

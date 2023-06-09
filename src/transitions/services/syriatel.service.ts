@@ -58,11 +58,12 @@ export class SyriatelService {
     const agent = new https.Agent({
       rejectUnauthorized: false,
     });
-    const transitionID = 'oba' + transition.transition_id;
+    const transition_id: number = 12934 + transition.transition_id;
+
 
     const data = {
       msisdn: mobile,
-      transactionId: transitionID,
+      transactionId: transition_id,
       voucherId: amount,
       payChannel: 2,
       ip: this.ip,
@@ -114,7 +115,7 @@ export class SyriatelService {
       where: { transition_id: transitionID },
     });
     if (transition.is_accepted === true) {
-      const transition_id: string = 'oba' + transitionID;
+      const transition_id: number = 12934 + transitionID;
       const data = {
         msisdn: mobile,
         transactionId: transition_id,
@@ -146,6 +147,7 @@ export class SyriatelService {
           HttpStatus.BAD_REQUEST,
         );
       const response = await axios(config);
+      console.log("Syriatel", response.data);
       if (response.data.message === 'Success.' && response.data.code === 0) {
         await this.transitionRepo.update(
           { transition_id: transitionID },
