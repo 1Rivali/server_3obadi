@@ -26,56 +26,56 @@ export class UserEntity {
   readonly user_id: number;
 
   @Column()
-  name: string;
+  readonly name: string;
 
   @Column({ unique: true })
-  mobile: string;
+  readonly mobile: string;
 
   @Exclude()
   @Column({ type: 'enum', enum: SimProviderEnum, nullable: false })
-  sim_provider: SimProviderEnum;
+  readonly sim_provider: SimProviderEnum;
 
   @Exclude()
-  @Column({ default: 0 })
-  is_pre_paid: boolean;
+  @Column({ default: 1 })
+  readonly is_pre_paid: boolean;
 
   @Exclude()
   @Column()
-  password: string;
+  readonly password: string;
 
   @Column({ default: 0 })
-  points: number;
+  readonly points: number;
 
   @Exclude()
-  @Column({ default: false })
-  is_verified: boolean;
+  @Column({ default: 0 })
+  readonly is_verified: boolean;
 
   @Exclude()
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
-  role: UserRole;
+  readonly role: UserRole;
 
   @Exclude()
   @CreateDateColumn()
-  created_at: Date;
+  readonly created_at: Date;
 
   @Exclude()
   @UpdateDateColumn()
-  updated_at: Date;
+  readonly updated_at: Date;
 
   @Exclude()
   @OneToMany(
     () => PasswordVerificationEntity,
-    (verification) => verification.user,
+    (verification) => verification.user
   )
-  verifications: PasswordVerificationEntity[];
+  readonly verifications: PasswordVerificationEntity[];
 
   @Exclude()
   @OneToMany(() => BarcodesEntity, (barcodes) => barcodes.user)
-  barcodes: BarcodesEntity[];
+  readonly barcodes: BarcodesEntity[];
 
   @Exclude()
   @OneToMany(() => TransitionEntity, (transitions) => transitions.user)
-  transitions: TransitionEntity[];
+  readonly transitions: TransitionEntity[];
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);

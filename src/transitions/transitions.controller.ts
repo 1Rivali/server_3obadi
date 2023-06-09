@@ -35,30 +35,40 @@ export class TransitionsController {
   @Post('/start')
   async startPointsTransition(
     @Body(new ValidationPipe()) transitionDto: StartTransitionDto,
-    @GetCurrentUser() reqUser: any,
+    @GetCurrentUser() reqUser: any
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
-   
-    if (user.sim_provider === SimProviderEnum.SYRIATEL)
-      return await this.syriatelService.recharge(
+
+    if (user.sim_provider === SimProviderEnum.SYRIATEL) {
+      if (user.is_pre_paid == true) {
+        return await this.syriatelService.rechargePrePaid(
+          userMobile,
+          transitionDto.amount,
+          transitionDto.location,
+          user
+        );
+      }
+      return await this.syriatelService.rechargePostPaid(
         userMobile,
         transitionDto.amount,
         transitionDto.location,
-        user,
+        user
       );
+    }
     return await this.mtnService.recharge(
       userMobile,
       transitionDto.amount,
-      user,
+      user
     );
   }
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get()
-  async getPreviousTransitions(@GetCurrentUser() reqUser:any){
-    const transitions= await this.transitionServices
-    .fetchPreviousTransitions(reqUser.user_id);
-    return {data:transitions}; 
+  async getPreviousTransitions(@GetCurrentUser() reqUser: any) {
+    const transitions = await this.transitionServices.fetchPreviousTransitions(
+      reqUser.user_id
+    );
+    return { data: transitions };
   }
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get('points')

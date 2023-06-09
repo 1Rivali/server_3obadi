@@ -25,23 +25,23 @@ export class SyriatelService {
     private readonly transitionRepo: Repository<TransitionEntity>,
     @InjectRepository(AmountTypesEntity)
     private readonly amountTypesRepo: Repository<AmountTypesEntity>,
-    private readonly userService: UsersService,
+    private readonly userService: UsersService
   ) {
     this.token = this.configService.get<string>('SYRIATEL_TOKEN');
     this.ip = this.configService.get<string>('IP');
   }
 
-  private async checkForRecharge(
+  private async checkForPrePaid(
     mobile: string,
     amount: number,
     location: string,
-    user: UserEntity,
-  ) {
+    user: UserEntity
+  ): Promise<number> {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     if (user.points < amount)
       throw new HttpException(
         "User doesn't have enough points",
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
 
     const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
@@ -58,8 +58,7 @@ export class SyriatelService {
     const agent = new https.Agent({
       rejectUnauthorized: false,
     });
-    const transition_id: number = 12934 + transition.transition_id;
-
+    const transition_id: string = 'fa' + transition.transition_id;
 
     const data = {
       msisdn: mobile,
@@ -83,15 +82,12 @@ export class SyriatelService {
 
     const response = await axios(config);
 
-    if (
-      response.data.code === 12 &&
-      response.data.message === 'GSM has reserve credit.'
-    )
+    if (response.data.code === 12)
       throw new HttpException(
         'User is on dept to syriatel',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
-    if (response.data.message === 'Success.' && response.data.code === 0) {
+    if (response.data.code === 0) {
       await this.transitionRepo.update({ user }, { is_accepted: true });
       return transition.transition_id;
     }
@@ -99,23 +95,23 @@ export class SyriatelService {
     throw new InternalServerErrorException();
   }
 
-  public async recharge(
+  public async rechargePrePaid(
     mobile: string,
     amount: number,
     location: string,
-    user: UserEntity,
+    user: UserEntity
   ) {
-    const transitionID: number = await this.checkForRecharge(
+    const transitionID: number = await this.checkForPrePaid(
       mobile,
       amount,
       location,
-      user,
+      user
     );
     const transition: TransitionEntity = await this.transitionRepo.findOne({
       where: { transition_id: transitionID },
     });
     if (transition.is_accepted === true) {
-      const transition_id: number = 12934 + transitionID;
+      const transition_id: string = 'fa' + transitionID;
       const data = {
         msisdn: mobile,
         transactionId: transition_id,
@@ -144,14 +140,132 @@ export class SyriatelService {
       if (newPoints < 0)
         throw new HttpException(
           "User Doesn't Have Enough Points",
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.BAD_REQUEST
         );
       const response = await axios(config);
-      console.log("Syriatel", response.data);
-      if (response.data.message === 'Success.' && response.data.code === 0) {
+      if (response.data.code === 5) {
+        console.log('number is postpaid');
+        await this.userService.setUserPostPaid(user.user_id);
+        return await this.rechargePostPaid(mobile, amount, location, user);
+      }
+      console.log('Syriatel', response.data);
+      if (response.data.code === 0) {
         await this.transitionRepo.update(
           { transition_id: transitionID },
-          { is_success: true },
+          { is_success: true }
+        );
+        await this.userService.updateUserPoints(user.user_id, newPoints);
+
+        return { statusCode: 200, message: 'Success' };
+      }
+
+      throw new InternalServerErrorException();
+    }
+  }
+
+  private async checkForPostPaid(
+    mobile: string,
+    user: UserEntity,
+    amount: number
+  ): Promise<number> {
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (user.points < amount)
+      throw new HttpException(
+        "User doesn't have enough points",
+        HttpStatus.BAD_REQUEST
+      );
+    const transition = this.transitionRepo.create({
+      amount: { amount },
+      user,
+    });
+    await this.transitionRepo.save(transition);
+
+    const agent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+    const transition_id: string = 'fa' + transition.transition_id;
+
+    const data = {
+      transactionId: transition_id,
+      msisdn: mobile,
+      channel: 1,
+    };
+    const config = {
+      method: 'post',
+      url: 'https://bulk.syriatel.com.sy/CompaniesAPIs/api/Company/CheckForPayBill',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ` + this.token,
+        'Content-Type': 'application/json',
+      },
+      data: data,
+      httpsAgent: agent,
+    };
+    const response = await axios(config);
+    if (response.data.code === 0) {
+      await this.transitionRepo.update({ user }, { is_accepted: true });
+      return transition.transition_id;
+    }
+    throw new InternalServerErrorException();
+  }
+
+  public async rechargePostPaid(
+    mobile: string,
+    amount: number,
+    location: string,
+    user: UserEntity
+  ) {
+    const transitionID: number = await this.checkForPostPaid(
+      mobile,
+      user,
+      amount
+    );
+
+    const transition: TransitionEntity = await this.transitionRepo.findOne({
+      where: { transition_id: transitionID },
+    });
+
+    if (transition.is_accepted === true) {
+      const transition_id: string = 'fa' + transitionID;
+
+      const data = {
+        transactionId: transition_id,
+        msisdn: mobile,
+        amount: amount,
+        channel: 1,
+        ip: this.ip,
+        location: location,
+        additional: '',
+      };
+
+      const agent = new https.Agent({
+        rejectUnauthorized: false,
+      });
+      const config = {
+        method: 'post',
+        url: 'https://bulk.syriatel.com.sy/CompaniesAPIs/api/Company/PayInAdvanced',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ` + this.token,
+          'Content-Type': 'application/json',
+        },
+        data: data,
+        httpsAgent: agent,
+      };
+
+      const newPoints: number = user.points - amount;
+
+      if (newPoints < 0)
+        throw new HttpException(
+          "User Doesn't Have Enough Points",
+          HttpStatus.BAD_REQUEST
+        );
+      const response = await axios(config);
+      console.log('Syriatel', response.data);
+      if (response.data.code === 0) {
+        await this.transitionRepo.update(
+          { transition_id: transitionID },
+          { is_success: true }
         );
         await this.userService.updateUserPoints(user.user_id, newPoints);
 

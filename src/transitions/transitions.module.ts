@@ -7,11 +7,13 @@ import { AmountTypesEntity } from './entities/amount-types.entity';
 import { TransitionEntity } from './entities/transitions.entity';
 import { UsersModule } from 'src/users/users.module';
 import { TransitionService } from './services/transition.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AmountTypesEntity, TransitionEntity]),
     UsersModule,
+    HttpModule,
   ],
   providers: [SyriatelService, MtnService, TransitionService],
   controllers: [TransitionsController],

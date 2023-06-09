@@ -13,7 +13,7 @@ import { hash } from 'src/utils';
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepo: Repository<UserEntity>,
+    private readonly usersRepo: Repository<UserEntity>
   ) {}
 
   async findOne(mobile: string): Promise<UserEntity | undefined> {
@@ -30,7 +30,7 @@ export class UsersService {
   async createUser(
     authDto: AuthDto,
     simProvider: SimProviderEnum,
-    isPrePaid: boolean,
+    isPrePaid: boolean
   ): Promise<UserEntity> {
     const user = await this.usersRepo.findOne({
       where: { mobile: authDto.mobile },
@@ -56,21 +56,28 @@ export class UsersService {
     const hashedPassword = await hash(password);
     const updatedUser = await this.usersRepo.update(
       { user_id: userId },
-      { password: hashedPassword },
+      { password: hashedPassword }
+    );
+  }
+
+  async setUserPostPaid(userId: number) {
+    const updateUser = await this.usersRepo.update(
+      { user_id: userId },
+      { is_pre_paid: false }
     );
   }
 
   async verifyUser(userId: number) {
     const user = await this.usersRepo.update(
       { user_id: userId },
-      { is_verified: true },
+      { is_verified: true }
     );
   }
 
   async updateUserPoints(userId: number, points: number) {
     const updateUser = await this.usersRepo.update(
       { user_id: userId },
-      { points },
+      { points }
     );
     return updateUser;
   }
