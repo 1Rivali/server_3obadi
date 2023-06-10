@@ -16,9 +16,11 @@ import { SyriatelService } from './services/syriatel.service';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
 import { UsersService } from 'src/users/users.service';
 import { MtnService } from './services/mtn.service';
-import { SimProviderEnum } from 'src/users/users.entity';
+import { SimProviderEnum, UserRole } from 'src/users/users.entity';
 import { Get } from '@nestjs/common/decorators';
 import { TransitionService } from './services/transition.service';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { Roles } from 'src/auth/roles/roles.decorator';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseFilters(new HttpExceptionFilter())
@@ -81,4 +83,9 @@ export class TransitionsController {
       },
     };
   }
+
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard, MobileVerificationGuard)
+  @Get('fix-mtn-prepaid')
+  async fixMtnPrepaid() {}
 }

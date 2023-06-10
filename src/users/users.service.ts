@@ -88,4 +88,10 @@ export class UsersService {
     });
     return user;
   }
+  async getAllMtn() {
+    return await this.usersRepo.find({
+      select: { user_id: true, mobile: true },
+      where: { sim_provider: SimProviderEnum.MTN },
+    });
+  }
 }

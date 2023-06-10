@@ -13,7 +13,6 @@ import { HttpModule } from '@nestjs/axios';
   imports: [
     TypeOrmModule.forFeature([AmountTypesEntity, TransitionEntity]),
     UsersModule,
-    HttpModule,
   ],
   providers: [SyriatelService, MtnService, TransitionService],
   controllers: [TransitionsController],

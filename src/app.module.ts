@@ -1,4 +1,4 @@
-import {MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -37,10 +37,10 @@ import { LoggerMiddleware } from './utils/logger/logger.middleware';
         AwardEntity,
         TransitionEntity,
         AmountTypesEntity,
-        AgentsEntity
+        AgentsEntity,
       ],
       // Remove this in production
-      synchronize: true,
+      synchronize: false,
     }),
     UsersModule,
     AuthModule,
