@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,10 +17,12 @@ import { AmountTypesEntity } from './transitions/entities/amount-types.entity';
 import { AgentsModule } from './agents/agents.module';
 import { AgentsEntity } from './agents/entities/agents.entity';
 import { LoggerMiddleware } from './utils/logger/logger.middleware';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    CacheModule.register({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -50,7 +51,6 @@ import { LoggerMiddleware } from './utils/logger/logger.middleware';
     AgentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

@@ -65,7 +65,7 @@ export class UserEntity {
   @Exclude()
   @OneToMany(
     () => PasswordVerificationEntity,
-    (verification) => verification.user
+    (verification) => verification.user,
   )
   readonly verifications: PasswordVerificationEntity[];
 

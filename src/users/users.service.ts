@@ -13,24 +13,24 @@ import { hash } from 'src/utils';
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepo: Repository<UserEntity>
+    private readonly usersRepo: Repository<UserEntity>,
   ) {}
 
   async findOne(mobile: string): Promise<UserEntity | undefined> {
-    let user = this.usersRepo.findOne({ where: { mobile } });
+    const user = this.usersRepo.findOne({ where: { mobile } });
     if (!user) throw new NotFoundException();
     return user;
   }
 
   async findUserById(userId: number): Promise<UserEntity | undefined> {
-    let user = this.usersRepo.findOne({ where: { user_id: userId } });
+    const user = this.usersRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException();
     return user;
   }
   async createUser(
     authDto: AuthDto,
     simProvider: SimProviderEnum,
-    isPrePaid: boolean
+    isPrePaid: boolean,
   ): Promise<UserEntity> {
     const user = await this.usersRepo.findOne({
       where: { mobile: authDto.mobile },
@@ -54,30 +54,24 @@ export class UsersService {
 
   async updateUserPassword(userId: number, password: string) {
     const hashedPassword = await hash(password);
-    const updatedUser = await this.usersRepo.update(
+    await this.usersRepo.update(
       { user_id: userId },
-      { password: hashedPassword }
+      { password: hashedPassword },
     );
   }
 
   async setUserPostPaid(userId: number) {
-    const updateUser = await this.usersRepo.update(
-      { user_id: userId },
-      { is_pre_paid: false }
-    );
+    await this.usersRepo.update({ user_id: userId }, { is_pre_paid: false });
   }
 
   async verifyUser(userId: number) {
-    const user = await this.usersRepo.update(
-      { user_id: userId },
-      { is_verified: true }
-    );
+    await this.usersRepo.update({ user_id: userId }, { is_verified: true });
   }
 
   async updateUserPoints(userId: number, points: number) {
     const updateUser = await this.usersRepo.update(
       { user_id: userId },
-      { points }
+      { points },
     );
     return updateUser;
   }
@@ -90,7 +84,6 @@ export class UsersService {
   }
   async getAllMtn() {
     return await this.usersRepo.find({
-      select: { user_id: true, mobile: true },
       where: { sim_provider: SimProviderEnum.MTN },
     });
   }

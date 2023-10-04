@@ -16,11 +16,9 @@ import { SyriatelService } from './services/syriatel.service';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
 import { UsersService } from 'src/users/users.service';
 import { MtnService } from './services/mtn.service';
-import { SimProviderEnum, UserRole } from 'src/users/users.entity';
+import { SimProviderEnum } from 'src/users/users.entity';
 import { Get } from '@nestjs/common/decorators';
 import { TransitionService } from './services/transition.service';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
-import { Roles } from 'src/auth/roles/roles.decorator';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseFilters(new HttpExceptionFilter())
@@ -30,45 +28,44 @@ export class TransitionsController {
     private readonly syriatelService: SyriatelService,
     private readonly userService: UsersService,
     private readonly mtnService: MtnService,
-    private readonly transitionServices: TransitionService
+    private readonly transitionServices: TransitionService,
   ) {}
 
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Post('/start')
   async startPointsTransition(
     @Body(new ValidationPipe()) transitionDto: StartTransitionDto,
-    @GetCurrentUser() reqUser: any
+    @GetCurrentUser() reqUser: any,
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
 
     if (user.sim_provider === SimProviderEnum.SYRIATEL) {
-      if (user.is_pre_paid == true) {
-        return await this.syriatelService.rechargePrePaid(
-          userMobile,
-          transitionDto.amount,
-          transitionDto.location,
-          user
-        );
+      const simType = await this.syriatelService.checkType(userMobile, user);
+      if (simType === false) {
+        await this.userService.setUserPostPaid(user.user_id);
       }
-      return await this.syriatelService.rechargePostPaid(
+      return await this.syriatelService.recharge(
         userMobile,
         transitionDto.amount,
+
         transitionDto.location,
-        user
       );
     }
-    return await this.mtnService.recharge(
-      userMobile,
-      transitionDto.amount,
-      user
-    );
+    if (user.sim_provider === SimProviderEnum.MTN) {
+      const simtype = await this.mtnService.checkNumberType(userMobile);
+
+      if (simtype === false) {
+        await this.userService.setUserPostPaid(user.user_id);
+      }
+      return await this.mtnService.recharge(userMobile, transitionDto.amount);
+    }
   }
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get()
   async getPreviousTransitions(@GetCurrentUser() reqUser: any) {
     const transitions = await this.transitionServices.fetchPreviousTransitions(
-      reqUser.user_id
+      reqUser.userId,
     );
     return { data: transitions };
   }
@@ -83,9 +80,4 @@ export class TransitionsController {
       },
     };
   }
-
-  @Roles(UserRole.ADMIN)
-  @UseGuards(JwtAuthGuard, RolesGuard, MobileVerificationGuard)
-  @Get('fix-mtn-prepaid')
-  async fixMtnPrepaid() {}
 }

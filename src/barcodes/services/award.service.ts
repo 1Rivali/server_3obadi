@@ -39,7 +39,7 @@ export class AwardService {
     const awards: AwardEntity[] = await this.awardRepo.find({
       select: { award_value: true, percentage: true },
     });
-   
+
     if (awards) return awards;
     throw new InternalServerErrorException();
   }

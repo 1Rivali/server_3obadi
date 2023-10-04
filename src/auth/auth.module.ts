@@ -4,10 +4,8 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { JwtStrategy } from './strategy/jwt.strategy';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { VerificationsModule } from 'src/verifications/verifications.module';
 import { TransitionsModule } from 'src/transitions/transitions.module';
-import { MtnService } from 'src/transitions/services/mtn.service';
 
 @Module({
   imports: [

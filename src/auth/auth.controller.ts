@@ -18,7 +18,7 @@ import { RequestPasswordResetDto } from './dtos/req-password-reset.dto';
 import { MobileVerifyDto } from './dtos/req-mobile-verify.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
-@UseFilters( HttpExceptionFilter)
+@UseFilters(HttpExceptionFilter)
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -54,7 +54,6 @@ export class AuthController {
   @HttpCode(200)
   @Post('/password/request/reset')
   async requestPasswordReset(
-    //need mobile
     @Body(new ValidationPipe()) reqPasswordResetDto: RequestPasswordResetDto,
   ) {
     return this.authService.requestPasswordReset(reqPasswordResetDto);
