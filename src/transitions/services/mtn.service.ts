@@ -13,7 +13,7 @@ import { AmountTypesEntity } from "../entities/amount-types.entity";
 import { UsersService } from "src/users/users.service";
 import * as https from "https";
 import axios from "axios";
-
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class MtnService {
   private mtnPassword: string;
   constructor(
     private readonly configService: ConfigService,
-    // @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectRepository(TransitionEntity)
     private readonly transitionRepo: Repository<TransitionEntity>,
     @InjectRepository(AmountTypesEntity)
@@ -33,11 +33,11 @@ export class MtnService {
     this.mtnPassword = this.configService.get<string>("MTN_PASSWORD");
   }
   async getToken(): Promise<string> {
-    // const cachedToken: string = await this.cacheManager.get<string>('token');
+    const cachedToken: string = await this.cacheManager.get<string>("token");
 
-    // if (cachedToken) {
-    //   return cachedToken;
-    // }
+    if (cachedToken) {
+      return cachedToken;
+    }
     const data = new URLSearchParams();
 
     data.append(
@@ -61,7 +61,7 @@ export class MtnService {
 
     if (response.data.errorDesc === "Operation Success") {
       const token = response.data.data.token;
-      // await this.cacheManager.set('token', token);
+      await this.cacheManager.set("token", token);
       return token;
     }
   }
@@ -179,7 +179,7 @@ export class MtnService {
     });
 
     if (response.data.error === "100009") {
-      // await this.cacheManager.del('token');
+      await this.cacheManager.del("token");
       const refreshedToken = await this.getToken();
 
       const headers = {
