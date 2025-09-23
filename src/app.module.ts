@@ -1,31 +1,31 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './users/users.entity';
-import { ConfigModule } from '@nestjs/config';
-import { VerificationsModule } from './verifications/verifications.module';
-import { MobileVerificationEntity } from './verifications/entities/mobile-verification.entity';
-import { PasswordVerificationEntity } from './verifications/entities/password-verification.entity';
-import { BarcodesModule } from './barcodes/barcodes.module';
-import { BarcodesEntity } from './barcodes/entities/barcodes.entity';
-import { AwardEntity } from './barcodes/entities/award.entity';
-import { TransitionsModule } from './transitions/transitions.module';
-import { TransitionEntity } from './transitions/entities/transitions.entity';
-import { AmountTypesEntity } from './transitions/entities/amount-types.entity';
-import { AgentsModule } from './agents/agents.module';
-import { AgentsEntity } from './agents/entities/agents.entity';
-import { LoggerMiddleware } from './utils/logger/logger.middleware';
-import { CacheModule } from '@nestjs/cache-manager';
+import { MiddlewareConsumer, Module } from "@nestjs/common";
+import { AppController } from "./app.controller";
+import { UsersModule } from "./users/users.module";
+import { AuthModule } from "./auth/auth.module";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { UserEntity } from "./users/users.entity";
+import { ConfigModule } from "@nestjs/config";
+import { VerificationsModule } from "./verifications/verifications.module";
+import { MobileVerificationEntity } from "./verifications/entities/mobile-verification.entity";
+import { PasswordVerificationEntity } from "./verifications/entities/password-verification.entity";
+import { BarcodesModule } from "./barcodes/barcodes.module";
+import { BarcodesEntity } from "./barcodes/entities/barcodes.entity";
+import { AwardEntity } from "./barcodes/entities/award.entity";
+import { TransitionsModule } from "./transitions/transitions.module";
+import { TransitionEntity } from "./transitions/entities/transitions.entity";
+import { AmountTypesEntity } from "./transitions/entities/amount-types.entity";
+import { AgentsModule } from "./agents/agents.module";
+import { AgentsEntity } from "./agents/entities/agents.entity";
+import { LoggerMiddleware } from "./utils/logger/logger.middleware";
+import { CacheModule } from "@nestjs/cache-manager";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register({ isGlobal: true }),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
+      type: "mysql",
+      host: "127.0.0.1",
       port: 3306,
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
@@ -41,7 +41,7 @@ import { CacheModule } from '@nestjs/cache-manager';
         AgentsEntity,
       ],
       // Remove this in production
-      synchronize: false,
+      synchronize: true,
     }),
     UsersModule,
     AuthModule,
@@ -54,6 +54,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes("*");
   }
 }
