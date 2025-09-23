@@ -5,15 +5,13 @@ import {
   Body,
   ValidationPipe,
   Get,
-  Res,
   UseFilters,
   UseInterceptors,
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 
-import { ConsumeBarcodeDto, CreateBarcodeDto } from './dto';
-import { AwardService } from './services/award.service';
-import { AwardEntity } from './entities/award.entity';
+import { ConsumeBarcodeDto } from './dto';
+
 import { BarcodesService } from './services/barcodes.service';
 
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -25,14 +23,10 @@ import { GenerateBarcodeDto } from './dto/generate-barcode.dto';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 
-
 @UseFilters(new HttpExceptionFilter())
 @Controller('api/v1/barcodes')
 export class BarcodesController {
-  constructor(
-    private awardService: AwardService,
-    private barcodeService: BarcodesService,
-  ) {}
+  constructor(private barcodeService: BarcodesService) {}
 
   // @Roles(UserRole.ADMIN)
   // @UseGuards(RolesGuard)
@@ -48,7 +42,7 @@ export class BarcodesController {
       consumeBarcodeDto.code,
       userId,
     );
-    
+
     return barcode;
   }
 
@@ -56,7 +50,6 @@ export class BarcodesController {
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get()
   async fetchScans(@GetCurrentUser() user: any) {
-   
     const barcodes = await this.barcodeService.fetchAllById(user.userId);
     return barcodes;
   }
@@ -64,15 +57,12 @@ export class BarcodesController {
   @UseGuards(JwtAuthGuard, RolesGuard, MobileVerificationGuard)
   @Post('/generate')
   async generateBarcodes(
-    
-    @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto
+    @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto,
   ) {
-    const fileName = await this.barcodeService.generateBarcodes(
+    await this.barcodeService.generateBarcodes(
       generateBarcodesDto.count,
       generateBarcodesDto.agent_id,
       generateBarcodesDto.award_id,
     );
-    
-   
   }
 }

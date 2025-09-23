@@ -104,7 +104,7 @@ export class AuthService {
         'User with provided phone number not found',
         HttpStatus.NOT_FOUND,
       );
-    return this.verificationService.verifyPasswordReset(
+    return await this.verificationService.verifyPasswordReset(
       user,
       passwordResetDto.newPassword,
       passwordResetDto.code,

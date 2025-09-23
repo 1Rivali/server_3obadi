@@ -28,7 +28,7 @@ export class TransitionsController {
     private readonly syriatelService: SyriatelService,
     private readonly userService: UsersService,
     private readonly mtnService: MtnService,
-    private readonly transitionServices: TransitionService
+    private readonly transitionServices: TransitionService,
   ) {}
 
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
@@ -39,26 +39,35 @@ export class TransitionsController {
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
-   
-    if (user.sim_provider === SimProviderEnum.SYRIATEL)
+
+    if (user.sim_provider === SimProviderEnum.SYRIATEL) {
+      const simType = await this.syriatelService.checkType(userMobile, user);
+      if (simType === false) {
+        await this.userService.setUserPostPaid(user.user_id);
+      }
       return await this.syriatelService.recharge(
         userMobile,
         transitionDto.amount,
+
         transitionDto.location,
-        user,
       );
-    return await this.mtnService.recharge(
-      userMobile,
-      transitionDto.amount,
-      user,
-    );
+    }
+    if (user.sim_provider === SimProviderEnum.MTN) {
+      const simtype = await this.mtnService.checkNumberType(userMobile);
+
+      if (simtype === false) {
+        await this.userService.setUserPostPaid(user.user_id);
+      }
+      return await this.mtnService.recharge(userMobile, transitionDto.amount);
+    }
   }
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get()
-  async getPreviousTransitions(@GetCurrentUser() reqUser:any){
-    const transitions= await this.transitionServices
-    .fetchPreviousTransitions(reqUser.user_id);
-    return {data:transitions}; 
+  async getPreviousTransitions(@GetCurrentUser() reqUser: any) {
+    const transitions = await this.transitionServices.fetchPreviousTransitions(
+      reqUser.userId,
+    );
+    return { data: transitions };
   }
   @UseGuards(JwtAuthGuard, MobileVerificationGuard)
   @Get('points')

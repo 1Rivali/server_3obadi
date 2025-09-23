@@ -17,13 +17,13 @@ export class UsersService {
   ) {}
 
   async findOne(mobile: string): Promise<UserEntity | undefined> {
-    let user = this.usersRepo.findOne({ where: { mobile } });
+    const user = this.usersRepo.findOne({ where: { mobile } });
     if (!user) throw new NotFoundException();
     return user;
   }
 
   async findUserById(userId: number): Promise<UserEntity | undefined> {
-    let user = this.usersRepo.findOne({ where: { user_id: userId } });
+    const user = this.usersRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException();
     return user;
   }
@@ -54,17 +54,18 @@ export class UsersService {
 
   async updateUserPassword(userId: number, password: string) {
     const hashedPassword = await hash(password);
-    const updatedUser = await this.usersRepo.update(
+    await this.usersRepo.update(
       { user_id: userId },
       { password: hashedPassword },
     );
   }
 
+  async setUserPostPaid(userId: number) {
+    await this.usersRepo.update({ user_id: userId }, { is_pre_paid: false });
+  }
+
   async verifyUser(userId: number) {
-    const user = await this.usersRepo.update(
-      { user_id: userId },
-      { is_verified: true },
-    );
+    await this.usersRepo.update({ user_id: userId }, { is_verified: true });
   }
 
   async updateUserPoints(userId: number, points: number) {
@@ -80,5 +81,10 @@ export class UsersService {
       where: { user_id: userId },
     });
     return user;
+  }
+  async getAllMtn() {
+    return await this.usersRepo.find({
+      where: { sim_provider: SimProviderEnum.MTN },
+    });
   }
 }

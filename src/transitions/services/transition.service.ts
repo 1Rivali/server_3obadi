@@ -2,21 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TransitionEntity } from '../entities/transitions.entity';
 import { Repository } from 'typeorm';
+import { MtnService } from './mtn.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class TransitionService {
   constructor(
     @InjectRepository(TransitionEntity)
     private readonly transitionRepo: Repository<TransitionEntity>,
+    private readonly mtnService: MtnService,
+    private readonly userService: UsersService,
   ) {}
 
   async fetchPreviousTransitions(userId: number): Promise<TransitionEntity[]> {
     const transitionsList = [];
-    const transitions:TransitionEntity[] = await this.transitionRepo.find({select:{amount:{amount:true}, sent_at:true},
+    const transitions: TransitionEntity[] = await this.transitionRepo.find({
       where: { user: { user_id: userId }, is_accepted: true, is_success: true },
-      relations:{
-        amount:true,
-      }
+      relations: {
+        amount: true,
+      },
     });
     transitions.forEach((transition) => {
       transitionsList.push({

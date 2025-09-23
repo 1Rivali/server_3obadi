@@ -15,7 +15,7 @@ export class BarcodesService {
     private readonly userService: UsersService,
   ) {}
 
-  async consumeBarcode(barcodeID: string, userId:number) {
+  async consumeBarcode(barcodeID: string, userId: number) {
     const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
       where: { barcode_id: barcodeID.trim() },
       relations: {
@@ -23,20 +23,19 @@ export class BarcodesService {
         agent: true,
       },
     });
-   
-    
+
     if (findBarcode) {
       if (findBarcode.is_used === true)
-      throw new HttpException(
-        'The Barcode is used before',
-        HttpStatus.BAD_REQUEST
-      );
-      
+        throw new HttpException(
+          'The Barcode is used before',
+          HttpStatus.BAD_REQUEST,
+        );
+
       const user = await this.userService.findUserById(userId);
       const newPoints = user.points + parseInt(findBarcode.award.award_value);
       await this.barcodeRepo.update(
         { barcode_id: barcodeID },
-        { is_used: true, user: user }
+        { is_used: true, user: user },
       );
       await this.userService.updateUserPoints(user.user_id, newPoints);
       return {
@@ -44,9 +43,9 @@ export class BarcodesService {
         agent: findBarcode.agent.agent_name,
       };
       // const award = await this.choosePoints();
-     
+
       // const user = await this.userService.findUserById(userId);
-     
+
       // const dbAward = await this.awardService.findAward(award);
       // const newPoints = user.points + parseInt(award);
       // this.barcodeRepo.update(
@@ -60,7 +59,10 @@ export class BarcodesService {
       //   agent: findBarcode.agent.agent_name,
       // };
     }
-    throw new HttpException("The requested barcode doesn't exist", HttpStatus.NOT_FOUND);
+    throw new HttpException(
+      "The requested barcode doesn't exist",
+      HttpStatus.NOT_FOUND,
+    );
   }
 
   async fetchAllById(userId: number): Promise<BarcodesEntity[]> {
@@ -74,7 +76,6 @@ export class BarcodesService {
       },
     });
     barcodes.forEach((barcode) => {
-    
       barcodesList.push({
         points: barcode.award.award_value,
         usedAt: barcode.used_at,
@@ -82,14 +83,18 @@ export class BarcodesService {
     });
     return barcodesList;
   }
-  async generateBarcodes(count: number, agent_id: number, award_id:number): Promise<string> {
+  async generateBarcodes(
+    count: number,
+    agent_id: number,
+    award_id: number,
+  ): Promise<string> {
     const rowsToInsert = [];
 
     for (let i = 0; i < count; i++) {
       const newRow = this.barcodeRepo.create({
         barcode_id: uuidv4(),
         agent: { agent_id },
-        award: { award_id }
+        award: { award_id },
       });
       rowsToInsert.push(newRow);
     }
@@ -105,18 +110,18 @@ export class BarcodesService {
       sheet.cell(`A${index + 1}`).value(row.barcode_id);
     });
     const award = await this.awardService.findAwardById(award_id);
-    
-    const fileName = `output_${agent_id}_${count}_${award.award_value}_${new Date().getTime()}.xlsx`;
+
+    const fileName = `output_${agent_id}_${count}_${
+      award.award_value
+    }_${new Date().getTime()}.xlsx`;
     await workbook.toFileAsync(fileName);
 
     console.log(
-      `${count} rows inserted successfully and barcode IDs saved to ${fileName}!`
+      `${count} rows inserted successfully and barcode IDs saved to ${fileName}!`,
     );
 
     return fileName;
   }
-
-
 
   // Helper functions
 
