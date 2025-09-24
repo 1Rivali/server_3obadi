@@ -1,15 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { AuthDto, LoginDto } from './dtos';
-import { SimProviderEnum, UserEntity } from 'src/users/users.entity';
-import * as bcrypt from 'bcryptjs';
-import { VerifyDto } from './dtos/verify.dto';
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { VerificationsService } from 'src/verifications/verifications.service';
-import { PasswordResetDto } from './dtos/password-reset.dto';
-import { RequestPasswordResetDto } from './dtos/req-password-reset.dto';
-import { MtnService } from 'src/transitions/services/mtn.service';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { UsersService } from "src/users/users.service";
+import { JwtService } from "@nestjs/jwt";
+import { AuthDto, LoginDto } from "./dtos";
+import { SimProviderEnum, UserEntity } from "src/users/users.entity";
+import * as bcrypt from "bcryptjs";
+import { HttpException, HttpStatus } from "@nestjs/common";
+import { VerificationsService } from "src/verifications/verifications.service";
+import { PasswordResetDto } from "./dtos/password-reset.dto";
+import { RequestPasswordResetDto } from "./dtos/req-password-reset.dto";
+import { MtnService } from "src/transitions/services/mtn.service";
 
 @Injectable()
 export class AuthService {
@@ -17,14 +16,14 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly verificationService: VerificationsService,
-    private readonly mtnService: MtnService,
+    private readonly mtnService: MtnService
   ) {}
 
   async login(loginDto: LoginDto) {
     const user = await this.userService.findOne(loginDto.mobile);
-    if (!user) throw new UnauthorizedException('Credentials incorrect');
+    if (!user) throw new UnauthorizedException("Credentials incorrect");
     if (!bcrypt.compareSync(loginDto.password, user.password))
-      throw new UnauthorizedException('Credentials incorrect');
+      throw new UnauthorizedException("Credentials incorrect");
 
     return {
       user,
@@ -32,7 +31,7 @@ export class AuthService {
         user.user_id,
         user.mobile,
         user.role,
-        user.is_verified,
+        user.is_verified
       ),
     };
   }
@@ -42,7 +41,7 @@ export class AuthService {
 
     let simProvider: SimProviderEnum;
     let simType: boolean;
-    if (provider === '3' || provider === '8' || provider === '9')
+    if (provider === "3" || provider === "8" || provider === "9")
       simProvider = SimProviderEnum.SYRIATEL;
     else {
       simProvider = SimProviderEnum.MTN;
@@ -52,47 +51,17 @@ export class AuthService {
     const createdUser = await this.userService.createUser(
       authDto,
       simProvider,
-      simType,
+      simType
     );
     return createdUser;
   }
 
-  async sendMobileVerification(mobile: string) {
-    const user = await this.userService.findOne(mobile);
-
-    if (!user)
-      throw new HttpException(
-        'User with provided phone number not found',
-        HttpStatus.NOT_FOUND,
-      );
-
-    if (user.is_verified === true)
-      throw new HttpException('User already verified', HttpStatus.BAD_REQUEST);
-
-    return this.verificationService.sendMobileVerification(user);
-  }
-
-  async verifyMobile(verifyDto: VerifyDto) {
-    const user = await this.userService.findOne(verifyDto.mobile);
-    if (!user)
-      throw new HttpException(
-        'User with provided phone number not found',
-        HttpStatus.NOT_FOUND,
-      );
-    if (user.is_verified === true)
-      throw new HttpException('User already verified', HttpStatus.BAD_REQUEST);
-    const verifyUser = this.verificationService.verifyMobile(
-      user,
-      verifyDto.code,
-    );
-    return verifyUser;
-  }
   async requestPasswordReset(reqPasswordResetDto: RequestPasswordResetDto) {
     const user = await this.userService.findOne(reqPasswordResetDto.mobile);
     if (!user)
       throw new HttpException(
-        'User with provided phone number not found',
-        HttpStatus.NOT_FOUND,
+        "User with provided phone number not found",
+        HttpStatus.NOT_FOUND
       );
     return this.verificationService.requestPasswordReset(user);
   }
@@ -101,13 +70,13 @@ export class AuthService {
     const user = await this.userService.findOne(passwordResetDto.mobile);
     if (!user)
       throw new HttpException(
-        'User with provided phone number not found',
-        HttpStatus.NOT_FOUND,
+        "User with provided phone number not found",
+        HttpStatus.NOT_FOUND
       );
     return await this.verificationService.verifyPasswordReset(
       user,
       passwordResetDto.newPassword,
-      passwordResetDto.code,
+      passwordResetDto.code
     );
   }
 
@@ -117,7 +86,7 @@ export class AuthService {
     userID: number,
     mobile: string,
     role: string,
-    is_verified: boolean,
+    is_verified: boolean
   ): string {
     return this.jwtService.sign(
       {
@@ -128,7 +97,7 @@ export class AuthService {
       },
       {
         secret: process.env.JWT_SECRET,
-      },
+      }
     );
   }
 }

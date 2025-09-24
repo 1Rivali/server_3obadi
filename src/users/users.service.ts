@@ -2,18 +2,18 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { SimProviderEnum, UserEntity } from './users.entity';
-import { Repository } from 'typeorm';
-import { AuthDto } from 'src/auth/dtos';
-import { hash } from 'src/utils';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { SimProviderEnum, UserEntity } from "./users.entity";
+import { Repository } from "typeorm";
+import { AuthDto } from "src/auth/dtos";
+import { hash } from "src/utils";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepo: Repository<UserEntity>,
+    private readonly usersRepo: Repository<UserEntity>
   ) {}
 
   async findOne(mobile: string): Promise<UserEntity | undefined> {
@@ -30,13 +30,13 @@ export class UsersService {
   async createUser(
     authDto: AuthDto,
     simProvider: SimProviderEnum,
-    isPrePaid: boolean,
+    isPrePaid: boolean
   ): Promise<UserEntity> {
     const user = await this.usersRepo.findOne({
       where: { mobile: authDto.mobile },
     });
     if (user) {
-      throw new ConflictException('User already exist');
+      throw new ConflictException("User already exist");
     }
 
     const hashedPassword = await hash(authDto.password);
@@ -47,6 +47,7 @@ export class UsersService {
       password: hashedPassword,
       sim_provider: simProvider,
       is_pre_paid: isPrePaid,
+      is_verified: true,
     });
 
     return this.usersRepo.save(createdUser);
@@ -56,7 +57,7 @@ export class UsersService {
     const hashedPassword = await hash(password);
     await this.usersRepo.update(
       { user_id: userId },
-      { password: hashedPassword },
+      { password: hashedPassword }
     );
   }
 
@@ -71,7 +72,7 @@ export class UsersService {
   async updateUserPoints(userId: number, points: number) {
     const updateUser = await this.usersRepo.update(
       { user_id: userId },
-      { points },
+      { points }
     );
     return updateUser;
   }
