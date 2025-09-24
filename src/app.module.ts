@@ -42,7 +42,7 @@ import { CacheModule } from "@nestjs/cache-manager";
       ],
       // autoLoadEntities: true,
       // Remove this in production
-      synchronize: true,
+      synchronize: false,
     }),
     UsersModule,
     AuthModule,
