@@ -21,6 +21,7 @@ import { UserRole } from "src/users/users.entity";
 import { GenerateBarcodeDto } from "./dto/generate-barcode.dto";
 import { Roles } from "src/auth/roles/roles.decorator";
 import { RolesGuard } from "src/auth/roles/roles.guard";
+import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
 
 @UseFilters(new HttpExceptionFilter())
 @Controller("api/v1/barcodes")
@@ -43,6 +44,33 @@ export class BarcodesController {
     );
 
     return barcode;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/redeem-by-phone-number")
+  async redeemBarcodeByPhoneNumber(
+    @Body(new ValidationPipe())
+    redeemBarcodeByPhoneNumberDto: RedeemBarcodeByPhoneNumberDto
+  ) {
+    const result = await this.barcodeService.redeemBarcodeByPhoneNumber(
+      redeemBarcodeByPhoneNumberDto.mobile,
+      redeemBarcodeByPhoneNumberDto.code
+    );
+
+    return result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/redeem-now")
+  async redeemBarcode(
+    @Body(new ValidationPipe())
+    redeemBarcodeDto: ConsumeBarcodeDto
+  ) {
+    const result = await this.barcodeService.redeemBarcode(
+      redeemBarcodeDto.code
+    );
+
+    return result;
   }
 
   @UseInterceptors(ClassSerializerInterceptor)

@@ -36,6 +36,8 @@ export class BarcodesService {
       // Handle different award types based on award_type
       let response: any = {
         agent: findBarcode.agent.agent_name,
+        agent_logo: findBarcode.agent.agent_logo,
+        agent_primary_color: findBarcode.agent.agent_primary_color,
         award_type: findBarcode.award.award_type,
         award_description: findBarcode.award.award_description,
       };
@@ -137,7 +139,9 @@ export class BarcodesService {
         is_redeemed: barcode.is_used,
         redeemed_at: barcode.used_at,
         created_at: barcode.created_at,
-        agent_name: barcode.agent?.agent_name || null,
+        agent: barcode.agent.agent_name,
+        agent_logo: barcode.agent.agent_logo,
+        agent_primary_color: barcode.agent.agent_primary_color,
       };
 
       // Add type-specific fields based on award type
@@ -203,6 +207,47 @@ export class BarcodesService {
     return fileName;
   }
 
+  async redeemBarcode(barcodeID: string) {
+    const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
+      where: { barcode_id: barcodeID.trim() },
+    });
+    if (!findBarcode) {
+      throw new HttpException(
+        "The requested barcode doesn't exist",
+        HttpStatus.NOT_FOUND
+      );
+    }
+    await this.barcodeRepo.update(
+      { barcode_id: barcodeID },
+      { is_redeemed: true, reciver_phone_number: null, immideate_redeem: true }
+    );
+    return {
+      message: "Barcode redeemed successfully",
+    };
+  }
+
+  async redeemBarcodeByPhoneNumber(phoneNumber: string, barcodeID: string) {
+    const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
+      where: { barcode_id: barcodeID.trim() },
+    });
+    if (!findBarcode) {
+      throw new HttpException(
+        "The requested barcode doesn't exist",
+        HttpStatus.NOT_FOUND
+      );
+    }
+    await this.barcodeRepo.update(
+      { barcode_id: barcodeID },
+      {
+        is_redeemed: true,
+        reciver_phone_number: phoneNumber,
+        immideate_redeem: false,
+      }
+    );
+    return {
+      message: "Barcode redeemed successfully",
+    };
+  }
   // Helper functions
 
   // private async choosePoints() {
