@@ -52,12 +52,28 @@ export class BarcodesController {
     @Body(new ValidationPipe())
     redeemBarcodeByPhoneNumberDto: RedeemBarcodeByPhoneNumberDto
   ) {
-    const result = await this.barcodeService.redeemBarcodeByPhoneNumber(
-      redeemBarcodeByPhoneNumberDto.mobile,
-      redeemBarcodeByPhoneNumberDto.code
-    );
+    try {
+      const result = await this.barcodeService.redeemBarcodeByPhoneNumber(
+        redeemBarcodeByPhoneNumberDto.mobile,
+        redeemBarcodeByPhoneNumberDto.code
+      );
 
-    return result;
+      return {
+        success: true,
+        data: result,
+        message: "Barcode redeemed successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message:
+            error.message || "An error occurred while redeeming the barcode",
+          status: error.status || 500,
+          details: error.response || null,
+        },
+      };
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -66,11 +82,27 @@ export class BarcodesController {
     @Body(new ValidationPipe())
     redeemBarcodeDto: ConsumeBarcodeDto
   ) {
-    const result = await this.barcodeService.redeemBarcode(
-      redeemBarcodeDto.code
-    );
+    try {
+      const result = await this.barcodeService.redeemBarcode(
+        redeemBarcodeDto.code
+      );
 
-    return result;
+      return {
+        success: true,
+        data: result,
+        message: "Barcode redeemed successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message:
+            error.message || "An error occurred while redeeming the barcode",
+          status: error.status || 500,
+          details: error.response || null,
+        },
+      };
+    }
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
