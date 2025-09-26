@@ -45,7 +45,7 @@ export class AuthService {
       simProvider = SimProviderEnum.SYRIATEL;
     else {
       simProvider = SimProviderEnum.MTN;
-      simType = await this.mtnService.checkNumberType(authDto.mobile);
+      // simType = await this.mtnService.checkNumberType(authDto.mobile);
     }
 
     const createdUser = await this.userService.createUser(
