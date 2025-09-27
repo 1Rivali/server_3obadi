@@ -26,9 +26,11 @@ export class BarcodesEntity {
   @JoinColumn({ name: "award_id" })
   readonly award: AwardEntity;
 
-  @Exclude()
   @Column({ default: false })
   readonly is_used: boolean;
+
+  @Column({ default: false })
+  readonly winner: boolean;
 
   @Column({ default: false })
   readonly is_redeemed: boolean;

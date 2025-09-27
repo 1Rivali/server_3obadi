@@ -23,11 +23,13 @@ export class BarcodesService {
         agent: true,
       },
     });
-
+    if (!findBarcode.winner) {
+      throw new HttpException("حظ أوفر", HttpStatus.CONFLICT);
+    }
     if (findBarcode) {
       if (findBarcode.is_used === true)
         throw new HttpException(
-          "The Barcode is used before",
+          "هذا الباركود مستخدم من قبل",
           HttpStatus.BAD_REQUEST
         );
 
