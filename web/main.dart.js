@@ -84838,7 +84838,7 @@ A.IC.prototype={
 G(a){var s,r=null,q=A.ae(a,B.l,t.J)
 q=new A.lc(A.f(q==null?r:q.gEN())).G(a)
 s=A.bv(25)
-return A.k3(q,r,new A.ch(B.ei,A.a5p(new A.ch(B.cp,A.CV(A.cp(A.a([A.zE("assets/images/logo.png",r,a.T(t.l).f.a.a/2),B.bG,B.a5X],t.p),B.D,B.B,B.bB),r),r),15,r,r,new A.bN(s,B.p)),r),r,r)}}
+return A.k3(q,r,new A.ch(B.ei,A.a5p(new A.ch(B.cp,A.CV(A.cp(A.a([A.zE("assets/images/logo.png",r,a.T(t.l).f.a.a/2),B.bG,B.a5V],t.p),B.D,B.B,B.bB),r),r),15,r,r,new A.bN(s,B.p)),r),r,r)}}
 A.lc.prototype={
 Fe(a,b,c){var s=null,r=A.aP(this.a,s,s,s,s,s,s,s)
 return A.aF0(b,s,!0,5,A.bw(s,s,B.n,s,s,new A.bm(s,s,s,s,s,new A.fX(B.ck,B.jf,B.bf,A.a([B.K,B.jC],t._),s,s),B.I),s,s,s,s,s,s,s),s,c,r)},
@@ -85683,7 +85683,7 @@ k=A.ae(a,B.l,q)
 k=A.aP(A.f(k==null?h:k.gTR(k)),h,h,h,h,h,h,h)
 j=s.Q
 i=t.da
-i=A.a([A.aHA(B.h,j,new A.afx(s,a),B.a5Z,B.y1,i),A.aHA(B.h,j,new A.afy(s,a),B.a5V,B.y0,i)],m)
+i=A.a([A.aHA(B.h,j,new A.afx(s,a),B.a5Z,B.y1,i),A.aHA(B.h,j,new A.afy(s,a),B.a5W,B.y0,i)],m)
 j=A.ae(a,B.l,q)
 j=j==null?h:j.gEN()
 j=A.a([l,new A.ze(k,i,B.h,B.h,B.h,B.h,h),A.aKl(B.rb,new A.afz(a),A.f(j))],m)
@@ -93815,8 +93815,8 @@ B.a1j=new A.j2(3,"hide")
 B.a9f=new A.j2(4,"remove")
 B.FS=new A.j2(5,"timeout")
 B.a1k=new A.vb(null,null,null,null,null,null,null,null,null,null)
-B.a5W=new A.k9("Sharing functionality coming soon!",null,null,null,null,null,null,null,null)
-B.FT=new A.qt(B.a5W,null,null,null,null,null,null,null,null,null,null,B.k1,null,null,B.jX,B.S,null)
+B.a5X=new A.k9("Sharing functionality coming soon!",null,null,null,null,null,null,null,null)
+B.FT=new A.qt(B.a5X,null,null,null,null,null,null,null,null,null,null,B.k1,null,null,B.jX,B.S,null)
 B.FU=new A.D7(0,"permissive")
 B.a9g=new A.D7(1,"normal")
 B.iJ=new A.D9(null,null,!1)
@@ -94164,9 +94164,9 @@ B.a56=new A.r(!0,B.h,null,"Roboto",null,null,null,null,null,null,null,null,null,
 B.a4K=new A.r(!0,B.h,null,"Roboto",null,null,null,null,null,null,null,null,null,null,null,null,null,B.e,null,null,null,"whiteMountainView labelSmall",null,null,null,null)
 B.a5U=new A.eI(B.a4u,B.a5D,B.a5m,B.a37,B.a5e,B.a4m,B.a5H,B.a3C,B.a45,B.a59,B.a32,B.a5o,B.a5c,B.a56,B.a4K)
 B.Gn=new A.DC(1,"longestLine")
+B.a5V=new A.k9("\u062a\u0623\u0633\u0633\u062a \u0627\u0644\u0634\u0631\u0643\u0629 \u0639\u0627\u0645 2014 \u0628\u0641\u0643\u0631 \u063a\u064a\u0631 \u062a\u0642\u0644\u064a\u062f\u064a \u0648 \u0627\u0644\u0644\u0647 \u0648\u0644\u064a\u0651\u064f \u0627\u0644\u062a\u0648\u0641\u064a\u0642",null,B.oE,null,B.a_,null,null,null,null)
 B.Gk=new A.r(!0,B.h,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.a5V=new A.k9("\u0627\u0644\u0639\u0631\u0628\u064a\u0629",null,B.Gk,null,null,null,null,null,null)
-B.a5X=new A.k9("\u062a\u0623\u0633\u0633\u062a \u0634\u0631\u0643\u0629 3tech \u0645\u0646\u0630 \u0639\u0627\u0645 2014 \u0648 \u0645\u0646\u0630 \u0628\u062f\u0627\u064a\u062a\u0647\u0627 \u0625\u062a\u0628\u0639\u062a \u0645\u0646\u0647\u062c \u0641\u0643\u0631\u064a \u063a\u064a\u0631 \u062a\u0642\u0644\u064a\u062f\u064a \u0628\u0645\u0641\u0647\u0648\u0645 \u062e\u0627\u0635 \u0646\u0648\u0627\u062a\u0647 \u062a\u0646\u0627\u062f\u064a \u0628\u0636\u0641\u0631\u0629 \u0627\u0644\u0639\u0644\u0648\u0645 \u0648 \u0627\u0644\u0625\u0633\u062a\u0641\u0627\u062f\u0629 \u0645\u0646 \u062c\u0645\u064a\u0639\u0647\u0627 \u0628\u0645\u0627 \u064a\u062e\u0635 \u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u0645\u0631\u062c\u0648 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u064a\u0647 \u0636\u0645\u0646 \u0636\u0648\u0627\u0628\u0637 \u0641\u0643\u0631\u064a\u0629 \u0648 \u0623\u0633\u0633 \u0639\u0644\u0645\u064a\u0629 \u0633\u0644\u064a\u0645\u0629 \u0648 \u0644\u0647\u0627 \u0645\u0624\u0634\u0631 \u062d\u0633\u0627\u0633 \u0645\u062a\u0645\u062b\u0644 \u0628\u0628\u0648\u0635\u0644\u0629 \u062a\u0639\u062a\u0645\u062f \u0639\u0644\u0649 \u0627\u0644\u062b\u0628\u0627\u062a \u0645\u0646 \u062c\u0647\u0629 \u0648 \u0627\u0644\u0637\u0648\u0627\u0641 \u0645\u0646 \u062c\u0647\u0629 \u0623\u062e\u0631\u0649 \u0644\u0625\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u0625\u0645\u0643\u0627\u0646\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u0627\u062d\u0629 \u0628\u0631\u0624\u064a\u0629 \u0645\u0633\u062a\u0642\u0628\u0644\u064a\u0629 \u0628\u0634\u0643\u0644 \u0645\u0648\u0636\u0648\u0639\u064a \u0645\u0639 \u0645\u0631\u0627\u0639\u0627\u0629 \u0627\u0644\u0648\u0627\u0642\u0639 \u0628\u0634\u0643\u0644 \u062f\u0642\u064a\u0642 \u0644\u064a\u062a\u062a\u0631\u062c\u0645 \u0630\u0644\u0643 \u0628\u062a\u0631\u0643 \u0628\u0635\u0645\u0629 \u0641\u064a \u0623\u064a \u0645\u062c\u0627\u0644 \u0623\u0631\u0627\u062f\u062a \u0623\u0646 \u062a\u0643\u0648\u0646 \u0645\u062a\u0648\u0627\u062c\u062f\u0629 \u0641\u064a\u0647 \u0648 \u0627\u0644\u0644\u0647 \u0648\u0644\u064a\u0651\u064f \u0627\u0644\u062a\u0648\u0641\u064a\u0642",null,B.oE,null,B.a_,null,null,null,null)
+B.a5W=new A.k9("\u0627\u0644\u0639\u0631\u0628\u064a\u0629",null,B.Gk,null,null,null,null,null,null)
 B.a5Z=new A.k9("English",null,B.Gk,null,null,null,null,null,null)
 B.a9i=new A.UM(0,"system")
 B.Go=new A.DD(0)
