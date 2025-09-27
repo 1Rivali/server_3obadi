@@ -11,7 +11,7 @@ export class AgentsEntity {
   @Column({ unique: true })
   agent_name: string;
 
-  @Column({ default: null, nullable: true })
+  @Column({ default: null, nullable: true, length: 30000 })
   agent_logo: string;
 
   @Column({ default: null, nullable: true })
