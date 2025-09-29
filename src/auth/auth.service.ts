@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+} from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import { AuthDto, LoginDto } from "./dtos";
@@ -20,20 +24,30 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.userService.findOne(loginDto.mobile);
-    if (!user) throw new UnauthorizedException("Credentials incorrect");
-    if (!bcrypt.compareSync(loginDto.password, user.password))
-      throw new UnauthorizedException("Credentials incorrect");
+    try {
+      const user = await this.userService.findOne(loginDto.mobile);
+      if (!user) throw new UnauthorizedException("Credentials incorrect");
+      if (!bcrypt.compareSync(loginDto.password, user.password))
+        throw new UnauthorizedException("Credentials incorrect");
 
-    return {
-      user,
-      token: this.genToken(
-        user.user_id,
-        user.mobile,
-        user.role,
-        user.is_verified
-      ),
-    };
+      return {
+        user,
+        token: this.genToken(
+          user.user_id,
+          user.mobile,
+          user.role,
+          user.is_verified
+        ),
+      };
+    } catch (error) {
+      // If user not found, it could be because they're soft deleted
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException(
+          "Account not found or has been deleted"
+        );
+      }
+      throw error;
+    }
   }
 
   async signup(authDto: AuthDto): Promise<UserEntity> {

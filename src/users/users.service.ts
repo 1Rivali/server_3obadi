@@ -19,13 +19,23 @@ export class UsersService {
   ) {}
 
   async findOne(mobile: string): Promise<UserEntity | undefined> {
-    const user = this.usersRepo.findOne({ where: { mobile } });
+    const user = await this.usersRepo.findOne({
+      where: {
+        mobile,
+        deleted_at: null, // Exclude soft deleted users
+      },
+    });
     if (!user) throw new NotFoundException();
     return user;
   }
 
   async findUserById(userId: number): Promise<UserEntity | undefined> {
-    const user = this.usersRepo.findOne({ where: { user_id: userId } });
+    const user = await this.usersRepo.findOne({
+      where: {
+        user_id: userId,
+        deleted_at: null, // Exclude soft deleted users
+      },
+    });
     if (!user) throw new NotFoundException();
     return user;
   }
@@ -34,13 +44,39 @@ export class UsersService {
     simProvider: SimProviderEnum,
     isPrePaid: boolean
   ): Promise<UserEntity> {
-    const user = await this.usersRepo.findOne({
+    // Check if user exists (including soft deleted users)
+    const existingUser = await this.usersRepo.findOne({
       where: { mobile: authDto.mobile },
     });
-    if (user) {
-      throw new ConflictException("User already exist");
+
+    if (existingUser) {
+      // If user exists and is NOT soft deleted, throw conflict
+      if (existingUser.deleted_at === null) {
+        throw new ConflictException("User already exist");
+      }
+
+      // If user is soft deleted, restore the account instead of creating new one
+      console.log("Restoring soft deleted user:", authDto.mobile);
+      await this.usersRepo.update(
+        { user_id: existingUser.user_id },
+        {
+          name: authDto.name,
+          password: await hash(authDto.password),
+          sim_provider: simProvider,
+          is_pre_paid: isPrePaid,
+          is_verified: true,
+          deleted_at: null, // Restore the account
+        }
+      );
+
+      // Return the restored user
+      return await this.usersRepo.findOne({
+        where: { user_id: existingUser.user_id },
+      });
     }
 
+    // No existing user found, create new user
+    console.log("Creating new user:", authDto.mobile);
     const hashedPassword = await hash(authDto.password);
 
     const createdUser = this.usersRepo.create({
@@ -81,20 +117,58 @@ export class UsersService {
   async getUserPoints(userId: number) {
     const user = await this.usersRepo.findOne({
       select: { points: true },
-      where: { user_id: userId },
+      where: {
+        user_id: userId,
+        deleted_at: null, // Exclude soft deleted users
+      },
     });
     return user;
   }
   async getAllMtn() {
     return await this.usersRepo.find({
-      where: { sim_provider: SimProviderEnum.MTN },
+      where: {
+        sim_provider: SimProviderEnum.MTN,
+        deleted_at: null, // Exclude soft deleted users
+      },
+    });
+  }
+
+  async findUserIncludingDeleted(
+    mobile: string
+  ): Promise<UserEntity | undefined> {
+    return await this.usersRepo.findOne({
+      where: { mobile },
+    });
+  }
+
+  async restoreUser(mobile: string): Promise<UserEntity> {
+    const user = await this.usersRepo.findOne({
+      where: { mobile },
+    });
+
+    if (!user || user.deleted_at === null) {
+      throw new NotFoundException(
+        "No soft deleted user found with this mobile"
+      );
+    }
+
+    await this.usersRepo.update(
+      { user_id: user.user_id },
+      { deleted_at: null }
+    );
+
+    return await this.usersRepo.findOne({
+      where: { user_id: user.user_id },
     });
   }
 
   async deleteAccount(userId: number, password: string) {
-    // Find the user by ID
+    // Find the user by ID (exclude already soft deleted users)
     const user = await this.usersRepo.findOne({
-      where: { user_id: userId },
+      where: {
+        user_id: userId,
+        deleted_at: null, // Only find non-deleted users
+      },
     });
 
     if (!user) {
@@ -107,8 +181,13 @@ export class UsersService {
       throw new UnauthorizedException("Invalid password");
     }
 
-    // Delete the user account
-    await this.usersRepo.delete({ user_id: userId });
+    // Soft delete the user account
+    console.log("Soft deleting user account:", userId);
+    await this.usersRepo.update(
+      { user_id: userId },
+      { deleted_at: new Date() }
+    );
+    console.log("User account soft deleted successfully");
 
     return {
       message: "Account deleted successfully",

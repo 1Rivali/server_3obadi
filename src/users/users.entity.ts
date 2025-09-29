@@ -1,7 +1,7 @@
-import { Exclude } from 'class-transformer';
-import { BarcodesEntity } from 'src/barcodes/entities/barcodes.entity';
-import { TransitionEntity } from 'src/transitions/entities/transitions.entity';
-import { PasswordVerificationEntity } from 'src/verifications/entities/password-verification.entity';
+import { Exclude } from "class-transformer";
+import { BarcodesEntity } from "src/barcodes/entities/barcodes.entity";
+import { TransitionEntity } from "src/transitions/entities/transitions.entity";
+import { PasswordVerificationEntity } from "src/verifications/entities/password-verification.entity";
 import {
   Column,
   CreateDateColumn,
@@ -9,18 +9,18 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from 'typeorm';
+} from "typeorm";
 
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
+  ADMIN = "ADMIN",
+  USER = "USER",
 }
 export enum SimProviderEnum {
-  SYRIATEL = 'sy',
-  MTN = 'mtn',
+  SYRIATEL = "sy",
+  MTN = "mtn",
 }
 
-@Entity({ name: 'users' })
+@Entity({ name: "users" })
 export class UserEntity {
   @PrimaryGeneratedColumn()
   readonly user_id: number;
@@ -32,7 +32,7 @@ export class UserEntity {
   readonly mobile: string;
 
   @Exclude()
-  @Column({ type: 'enum', enum: SimProviderEnum, nullable: false })
+  @Column({ type: "enum", enum: SimProviderEnum, nullable: false })
   readonly sim_provider: SimProviderEnum;
 
   @Exclude()
@@ -51,7 +51,7 @@ export class UserEntity {
   readonly is_verified: boolean;
 
   @Exclude()
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   readonly role: UserRole;
 
   @Exclude()
@@ -63,9 +63,13 @@ export class UserEntity {
   readonly updated_at: Date;
 
   @Exclude()
+  @Column({ nullable: true })
+  readonly deleted_at: Date;
+
+  @Exclude()
   @OneToMany(
     () => PasswordVerificationEntity,
-    (verification) => verification.user,
+    (verification) => verification.user
   )
   readonly verifications: PasswordVerificationEntity[];
 
