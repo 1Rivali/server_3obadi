@@ -28,9 +28,15 @@ export class UsersController {
     @GetCurrentUser() user: any,
     @Body(new ValidationPipe()) deleteAccountDto: DeleteAccountDto
   ) {
-    return this.usersService.deleteAccount(
-      user.userId,
-      deleteAccountDto.password
-    );
+    try {
+      return this.usersService.deleteAccount(
+        user.userId,
+        deleteAccountDto.password
+      );
+    } catch (error) {
+      console.error("Error in deleteAccount controller:", error);
+      console.error("Error stack:", error.stack);
+      throw error;
+    }
   }
 }
