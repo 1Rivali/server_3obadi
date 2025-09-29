@@ -2,12 +2,14 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { SimProviderEnum, UserEntity } from "./users.entity";
 import { Repository } from "typeorm";
 import { AuthDto } from "src/auth/dtos";
 import { hash } from "src/utils";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class UsersService {
@@ -87,5 +89,30 @@ export class UsersService {
     return await this.usersRepo.find({
       where: { sim_provider: SimProviderEnum.MTN },
     });
+  }
+
+  async deleteAccount(userId: number, password: string) {
+    // Find the user by ID
+    const user = await this.usersRepo.findOne({
+      where: { user_id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Verify the password
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid password");
+    }
+
+    // Delete the user account
+    await this.usersRepo.delete({ user_id: userId });
+
+    return {
+      message: "Account deleted successfully",
+      deletedAt: new Date(),
+    };
   }
 }
