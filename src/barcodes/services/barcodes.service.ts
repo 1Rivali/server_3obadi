@@ -37,7 +37,7 @@ export class BarcodesService {
       if (!isMetalized.is_metalized) {
         throw new HttpException(
           "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
-          HttpStatus.BAD_REQUEST
+          HttpStatus.CONFLICT
         );
       }
       const user = await this.userService.findUserById(userId);
