@@ -66,7 +66,7 @@ export class BarcodesService {
     if (!isM.is_metalized) {
       throw new HttpException(
         "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
-        HttpStatus.CONFLICT
+        HttpStatus.BAD_REQUEST
       );
     }
 
