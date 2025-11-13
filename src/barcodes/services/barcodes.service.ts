@@ -14,11 +14,14 @@ export class BarcodesService {
     @InjectRepository(BarcodesEntity)
     private readonly barcodeRepo: Repository<BarcodesEntity>,
     private readonly awardService: AwardService,
-    private readonly userService: UsersService,
+    private readonly userService: UsersService
+  ) {}
 
-  ) { }
-
-  async consumeBarcode(barcodeID: string, userId: number, file: Express.Multer.File) {
+  async consumeBarcode(
+    barcodeID: string,
+    userId: number,
+    file: Express.Multer.File
+  ) {
     const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
       where: { barcode_id: barcodeID.trim() },
       relations: {
@@ -26,102 +29,121 @@ export class BarcodesService {
         agent: true,
       },
     });
+
+    if (!findBarcode) {
+      throw new HttpException(
+        "The requested barcode doesn't exist",
+        HttpStatus.NOT_FOUND
+      );
+    }
+
     if (!findBarcode.winner) {
       throw new HttpException("حظ أوفر", HttpStatus.CONFLICT);
     }
-    if (findBarcode) {
-      if (findBarcode.is_used)
-        throw new HttpException(
-          "هذا الباركود مستخدم من قبل",
-          HttpStatus.BAD_REQUEST
-        );
-      const isM = await isMetalised(file);
-      this.logger.log(JSON.stringify(isM))
-      if (!isM.is_metalized) {
-        throw new HttpException(
-          "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
-          HttpStatus.CONFLICT
-        );
-      }
-      const user = await this.userService.findUserById(userId);
 
-      // Handle different award types based on award_type
-      let response: any = {
-        agent: findBarcode.agent.agent_name,
-        agent_logo: findBarcode.agent.agent_logo,
-        agent_primary_color: findBarcode.agent.agent_primary_color,
-        award_type: findBarcode.award.award_type,
-        award_description: findBarcode.award.award_description,
-      };
+    if (findBarcode.is_used) {
+      throw new HttpException(
+        "هذا الباركود مستخدم من قبل",
+        HttpStatus.BAD_REQUEST
+      );
+    }
 
-      switch (findBarcode.award.award_type) {
-        case "points":
-          // For points, award_value is a number (points to add)
-          const pointsToAdd = parseInt(findBarcode.award.award_value);
-          if (isNaN(pointsToAdd) || pointsToAdd <= 0) {
-            throw new HttpException(
-              "Invalid points value",
-              HttpStatus.BAD_REQUEST
-            );
-          }
-          const newPoints = user.points + pointsToAdd;
-          await this.userService.updateUserPoints(user.user_id, newPoints);
-          response.points_awarded = findBarcode.award.award_value;
-          response.total_points = newPoints;
-          response.message = `You have been awarded ${findBarcode.award.award_value} points!`;
-          break;
+    let isM;
+    try {
+      isM = await isMetalised(file);
+      this.logger.log(JSON.stringify(isM));
+    } catch (error) {
+      this.logger.error(
+        `Failed to check if barcode is metalized: ${error.message}`,
+        error.stack
+      );
+      throw new HttpException(
+        "فشل في التحقق من صحة الصورة. يرجى المحاولة مرة أخرى",
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
 
-        case "discount":
-          // For discount, award_value is a string (discount code)
-          response.discount_code = findBarcode.award.award_value;
-          response.message = `Discount code: ${findBarcode.award.award_value}`;
-          response.instructions =
-            "Use this code at checkout to get your discount";
-          break;
+    if (!isM.is_metalized) {
+      throw new HttpException(
+        "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
+        HttpStatus.CONFLICT
+      );
+    }
 
-        case "physical":
-          // For physical, award_value is a string (prize identifier/name)
-          response.prize_name = findBarcode.award.award_value;
-          response.prize_description = findBarcode.award.award_description;
-          response.message = `Congratulations! You won: ${findBarcode.award.award_value}`;
-          response.instructions = "Contact us to arrange prize collection";
-          break;
+    const user = await this.userService.findUserById(userId);
 
-        default:
+    // Handle different award types based on award_type
+    let response: any = {
+      agent: findBarcode.agent.agent_name,
+      agent_logo: findBarcode.agent.agent_logo,
+      agent_primary_color: findBarcode.agent.agent_primary_color,
+      award_type: findBarcode.award.award_type,
+      award_description: findBarcode.award.award_description,
+    };
+
+    switch (findBarcode.award.award_type) {
+      case "points":
+        // For points, award_value is a number (points to add)
+        const pointsToAdd = parseInt(findBarcode.award.award_value);
+        if (isNaN(pointsToAdd) || pointsToAdd <= 0) {
           throw new HttpException(
-            `Unsupported award type: ${findBarcode.award.award_type}`,
+            "Invalid points value",
             HttpStatus.BAD_REQUEST
           );
-      }
+        }
+        const newPoints = user.points + pointsToAdd;
+        await this.userService.updateUserPoints(user.user_id, newPoints);
+        response.points_awarded = findBarcode.award.award_value;
+        response.total_points = newPoints;
+        response.message = `You have been awarded ${findBarcode.award.award_value} points!`;
+        break;
 
-      // Mark barcode as used
-      await this.barcodeRepo.update(
-        { barcode_id: barcodeID },
-        { is_used: true, user: user }
-      );
+      case "discount":
+        // For discount, award_value is a string (discount code)
+        response.discount_code = findBarcode.award.award_value;
+        response.message = `Discount code: ${findBarcode.award.award_value}`;
+        response.instructions =
+          "Use this code at checkout to get your discount";
+        break;
 
-      return response;
-      // const award = await this.choosePoints();
+      case "physical":
+        // For physical, award_value is a string (prize identifier/name)
+        response.prize_name = findBarcode.award.award_value;
+        response.prize_description = findBarcode.award.award_description;
+        response.message = `Congratulations! You won: ${findBarcode.award.award_value}`;
+        response.instructions = "Contact us to arrange prize collection";
+        break;
 
-      // const user = await this.userService.findUserById(userId);
-
-      // const dbAward = await this.awardService.findAward(award);
-      // const newPoints = user.points + parseInt(award);
-      // this.barcodeRepo.update(
-      //   { barcode_id: barcodeID },
-      //   { is_used: true, user: user, award: dbAward }
-      // );
-      // await this.userService.updateUserPoints(user.user_id, newPoints);
-
-      // return {
-      //   points: award,
-      //   agent: findBarcode.agent.agent_name,
-      // };
+      default:
+        throw new HttpException(
+          `Unsupported award type: ${findBarcode.award.award_type}`,
+          HttpStatus.BAD_REQUEST
+        );
     }
-    throw new HttpException(
-      "The requested barcode doesn't exist",
-      HttpStatus.NOT_FOUND
+
+    // Mark barcode as used
+    await this.barcodeRepo.update(
+      { barcode_id: barcodeID },
+      { is_used: true, user: user }
     );
+
+    return response;
+    // const award = await this.choosePoints();
+
+    // const user = await this.userService.findUserById(userId);
+
+    // const dbAward = await this.awardService.findAward(award);
+    // const newPoints = user.points + parseInt(award);
+    // this.barcodeRepo.update(
+    //   { barcode_id: barcodeID },
+    //   { is_used: true, user: user, award: dbAward }
+    // );
+    // await this.userService.updateUserPoints(user.user_id, newPoints);
+
+    // return {
+    //   points: award,
+    //   agent: findBarcode.agent.agent_name,
+    // };
   }
 
   async fetchAllById(userId: number): Promise<any[]> {
@@ -207,8 +229,9 @@ export class BarcodesService {
     });
     const award = await this.awardService.findAwardById(award_id);
 
-    const fileName = `output_${agent_id}_${count}_${award.award_value
-      }_${new Date().getTime()}.xlsx`;
+    const fileName = `output_${agent_id}_${count}_${
+      award.award_value
+    }_${new Date().getTime()}.xlsx`;
     await workbook.toFileAsync(fileName);
 
     console.log(
