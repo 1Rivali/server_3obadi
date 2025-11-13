@@ -33,8 +33,9 @@ export class BarcodesService {
           "هذا الباركود مستخدم من قبل",
           HttpStatus.BAD_REQUEST
         );
-      const isMetalized = await isMetalised(file);
-      if (!isMetalized.is_metalized) {
+      const isM = await isMetalised(file);
+      console.log("isMetalized: ", isM)
+      if (!isM.is_metalized) {
         throw new HttpException(
           "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
           HttpStatus.CONFLICT
