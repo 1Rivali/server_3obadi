@@ -130,7 +130,7 @@ export const isMetalised = async (
     const baseURL =
       process.env.AI_BASE_URL ||
       process.env.AI_SERVICE_URL ||
-      "https://ai.3tech.sy";
+      "http://localhost:8000";
     errorDetails.push(`Target URL: ${baseURL}/detect-metalized`);
     errorDetails.push(`Attempts: ${retries + 1}`);
 
