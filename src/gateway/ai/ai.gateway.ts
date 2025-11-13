@@ -36,6 +36,14 @@ export const isMetalised = async (
     );
     return response.data;
   } catch (error) {
+    // Handle AggregateError (may contain multiple errors)
+    if (error.name === "AggregateError" && error.errors) {
+      const errorMessages = error.errors
+        .map((e: any) => `${e.message || "Unknown"} (${e.code || "no code"})`)
+        .join("; ");
+      throw new Error(`AggregateError from AI Service: ${errorMessages}`);
+    }
+
     // Log more details about the error for debugging
     if (error.response) {
       // The request was made and the server responded with a status code
@@ -47,12 +55,33 @@ export const isMetalised = async (
       );
     } else if (error.request) {
       // The request was made but no response was received
+      const errorDetails: string[] = [];
+      errorDetails.push(`Message: ${error.message || "Unknown error"}`);
+      if (error.code) errorDetails.push(`Code: ${error.code}`);
+      if (error.cause)
+        errorDetails.push(`Cause: ${JSON.stringify(error.cause)}`);
+      if (error.name) errorDetails.push(`Name: ${error.name}`);
+
+      // Get baseURL from environment
+      const baseURL =
+        process.env.AI_BASE_URL ||
+        process.env.AI_SERVICE_URL ||
+        "https://ai.3tech.sy";
+      errorDetails.push(`Target URL: ${baseURL}/detect-metalized`);
+
       throw new Error(
-        `No response from AI Service. Request details: ${error.message}`
+        `No response from AI Service. ${errorDetails.join(" | ")}`
       );
     } else {
       // Something happened in setting up the request that triggered an Error
-      throw new Error(`Error setting up request: ${error.message}`);
+      const errorDetails: string[] = [];
+      errorDetails.push(`Message: ${error.message || "Unknown error"}`);
+      if (error.code) errorDetails.push(`Code: ${error.code}`);
+      if (error.cause)
+        errorDetails.push(`Cause: ${JSON.stringify(error.cause)}`);
+      if (error.name) errorDetails.push(`Name: ${error.name}`);
+
+      throw new Error(`Error setting up request: ${errorDetails.join(" | ")}`);
     }
   }
 };
