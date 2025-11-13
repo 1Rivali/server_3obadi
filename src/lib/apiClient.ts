@@ -3,6 +3,8 @@ import axios, {
     AxiosResponse,
     InternalAxiosRequestConfig,
 } from "axios";
+import http from "http";
+import https from "https";
 
 export interface ApiResponse<T> {
     data: T;
@@ -10,12 +12,23 @@ export interface ApiResponse<T> {
     statusText: string;
 }
 
+const baseURL = process.env.AI_BASE_URL || process.env.AI_SERVICE_URL || "https://ai.3tech.sy";
+const timeout = process.env.AI_TIMEOUT_MS ? Number(process.env.AI_TIMEOUT_MS) : 10000;
+const allowInsecure = process.env.AI_ALLOW_INSECURE === "true";
+
+const httpAgent = new http.Agent();
+const httpsAgent = allowInsecure
+    ? new https.Agent({ rejectUnauthorized: false })
+    : new https.Agent();
+
 const apiClient = axios.create({
-    baseURL: "https://ai.3tech.sy",
-    timeout: 10000,
-    headers: {
-        "Content-Type": "application/json",
-    },
+    baseURL,
+    timeout,
+    // Do not set a global Content-Type; let axios infer it (e.g., FormData with boundary)
+    httpAgent,
+    httpsAgent,
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
 });
 
 // apiClient.interceptors.request.use(
