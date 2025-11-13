@@ -3,8 +3,8 @@ import axios, {
     AxiosResponse,
     InternalAxiosRequestConfig,
 } from "axios";
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 
 export interface ApiResponse<T> {
     data: T;
