@@ -1,7 +1,7 @@
 import { post } from "src/lib/apiClient";
 import { IsMetalizedResponse } from "./metalized.response";
 import { MetalizedRequest } from "./meatalized.request";
-import FormData from "form-data";
+const FormData = require("form-data");
 
 export const isMetalised = async (
   file: Express.Multer.File
