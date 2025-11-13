@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import { Injectable, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BarcodesEntity } from "../entities/barcodes.entity";
 import { Repository } from "typeorm";
@@ -9,11 +9,13 @@ import * as xlsx from "xlsx-populate";
 import { isMetalised } from "src/gateway/ai/ai.gateway";
 @Injectable()
 export class BarcodesService {
+  private readonly logger = new Logger("Barcode Service");
   constructor(
     @InjectRepository(BarcodesEntity)
     private readonly barcodeRepo: Repository<BarcodesEntity>,
     private readonly awardService: AwardService,
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
+
   ) { }
 
   async consumeBarcode(barcodeID: string, userId: number, file: Express.Multer.File) {
@@ -34,7 +36,7 @@ export class BarcodesService {
           HttpStatus.BAD_REQUEST
         );
       const isM = await isMetalised(file);
-      console.log("isMetalized: ", isM)
+      this.logger.log(isM)
       if (!isM.is_metalized) {
         throw new HttpException(
           "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
