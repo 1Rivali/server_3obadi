@@ -38,13 +38,14 @@ export class BarcodesController {
   @Post("/consume")
   async ConsumeBarcode(
     @Body(new ValidationPipe()) consumeBarcodeDto: ConsumeBarcodeDto,
+    @UploadedFile() file: Express.Multer.File,
     @GetCurrentUser() user: any
   ) {
     const userId: number = user.userId;
     const barcode = await this.barcodeService.consumeBarcode(
       consumeBarcodeDto.code,
       userId,
-      consumeBarcodeDto.file
+      file
     );
 
     return barcode;

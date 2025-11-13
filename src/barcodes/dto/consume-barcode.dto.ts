@@ -5,6 +5,4 @@ export class ConsumeBarcodeDto {
   @Length(36, 36)
   @IsString()
   code: string;
-
-  file: Express.Multer.File;
 }
