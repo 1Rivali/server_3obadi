@@ -6,6 +6,7 @@ import { AwardService } from "./award.service";
 import { UsersService } from "src/users/users.service";
 import { v4 as uuidv4 } from "uuid";
 import * as xlsx from "xlsx-populate";
+import { isMetalised } from "src/gateway/ai/ai.gateway";
 @Injectable()
 export class BarcodesService {
   constructor(
@@ -13,9 +14,9 @@ export class BarcodesService {
     private readonly barcodeRepo: Repository<BarcodesEntity>,
     private readonly awardService: AwardService,
     private readonly userService: UsersService
-  ) {}
+  ) { }
 
-  async consumeBarcode(barcodeID: string, userId: number) {
+  async consumeBarcode(barcodeID: string, userId: number, file: Express.Multer.File) {
     const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
       where: { barcode_id: barcodeID.trim() },
       relations: {
@@ -27,12 +28,18 @@ export class BarcodesService {
       throw new HttpException("حظ أوفر", HttpStatus.CONFLICT);
     }
     if (findBarcode) {
-      if (findBarcode.is_used === true)
+      if (findBarcode.is_used)
         throw new HttpException(
           "هذا الباركود مستخدم من قبل",
           HttpStatus.BAD_REQUEST
         );
-
+      const isMetalized = await isMetalised(file);
+      if (!isMetalized.is_metalized) {
+        throw new HttpException(
+          "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
+          HttpStatus.BAD_REQUEST
+        );
+      }
       const user = await this.userService.findUserById(userId);
 
       // Handle different award types based on award_type
@@ -197,9 +204,8 @@ export class BarcodesService {
     });
     const award = await this.awardService.findAwardById(award_id);
 
-    const fileName = `output_${agent_id}_${count}_${
-      award.award_value
-    }_${new Date().getTime()}.xlsx`;
+    const fileName = `output_${agent_id}_${count}_${award.award_value
+      }_${new Date().getTime()}.xlsx`;
     await workbook.toFileAsync(fileName);
 
     console.log(
