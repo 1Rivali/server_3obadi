@@ -18,16 +18,16 @@ const apiClient = axios.create({
     },
 });
 
-apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+// apiClient.interceptors.request.use(
+//     (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+//         const token = localStorage.getItem("token");
+//         if (token) {
+//             config.headers.Authorization = `Bearer ${token}`;
+//         }
+//         return config;
+//     },
+//     (error) => Promise.reject(error)
+// );
 
 apiClient.interceptors.response.use(
     (response: AxiosResponse): AxiosResponse => response,
