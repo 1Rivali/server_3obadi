@@ -36,7 +36,7 @@ export class BarcodesService {
           HttpStatus.BAD_REQUEST
         );
       const isM = await isMetalised(file);
-      this.logger.log(isM)
+      this.logger.log(JSON.stringify(isM))
       if (!isM.is_metalized) {
         throw new HttpException(
           "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
