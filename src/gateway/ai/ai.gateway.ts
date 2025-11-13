@@ -1,7 +1,7 @@
 import { post } from "src/lib/apiClient"
 import { IsMetalizedResponse } from "./metalized.response"
 import { MetalizedRequest } from "./meatalized.request"
-import FormData from "form-data"
+import FormData = require("form-data")
 import https from "https"
 
 export const isMetalised = async (file: Express.Multer.File): Promise<IsMetalizedResponse> => {
