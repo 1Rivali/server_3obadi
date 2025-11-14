@@ -9,11 +9,14 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   UploadedFile,
+  Res,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 
-import { ConsumeBarcodeDto } from "./dto";
+import { Response } from "express";
+import { join } from "path";
 
+import { ConsumeBarcodeDto } from "./dto";
 import { BarcodesService } from "./services/barcodes.service";
 
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
@@ -90,12 +93,16 @@ export class BarcodesController {
   // @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("/generate")
   async generateBarcodes(
-    @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto
+    @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto,
+    @Res() res: Response
   ) {
-    await this.barcodeService.generateBarcodes(
+    const fileName = await this.barcodeService.generateBarcodes(
       generateBarcodesDto.count,
       generateBarcodesDto.agent_id,
       generateBarcodesDto.award_id
     );
+
+    const filePath = join(process.cwd(), fileName);
+    return res.download(filePath, fileName);
   }
 }
