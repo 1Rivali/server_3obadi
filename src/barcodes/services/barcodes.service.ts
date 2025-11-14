@@ -31,14 +31,11 @@ export class BarcodesService {
     });
 
     if (!findBarcode) {
-      throw new HttpException(
-        "The requested barcode doesn't exist",
-        HttpStatus.NOT_FOUND
-      );
+      throw new HttpException("هذا الباركود غير موجود", HttpStatus.BAD_REQUEST);
     }
 
     if (!findBarcode.winner) {
-      throw new HttpException("حظ أوفر", HttpStatus.CONFLICT);
+      throw new HttpException("حظ أوفر", HttpStatus.BAD_REQUEST);
     }
 
     if (findBarcode.is_used) {
