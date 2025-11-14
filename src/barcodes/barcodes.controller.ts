@@ -8,7 +8,7 @@ import {
   UseFilters,
   UseInterceptors,
   ClassSerializerInterceptor,
-  UploadedFile
+  UploadedFile,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 
@@ -28,13 +28,13 @@ import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
 @UseFilters(new HttpExceptionFilter())
 @Controller("api/v1/barcodes")
 export class BarcodesController {
-  constructor(private barcodeService: BarcodesService) { }
+  constructor(private barcodeService: BarcodesService) {}
 
   // @Roles(UserRole.ADMIN)
   // @UseGuards(RolesGuard)
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor("file"))
   @Post("/consume")
   async ConsumeBarcode(
     @Body(new ValidationPipe()) consumeBarcodeDto: ConsumeBarcodeDto,
@@ -85,8 +85,9 @@ export class BarcodesController {
     const barcodes = await this.barcodeService.fetchAllById(user.userId);
     return barcodes;
   }
-  @Roles(UserRole.ADMIN)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
+  // @Roles(UserRole.ADMIN)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("/generate")
   async generateBarcodes(
     @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto
