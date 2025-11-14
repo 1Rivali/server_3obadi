@@ -45,6 +45,18 @@ export class BarcodesService {
       );
     }
 
+    if (file) {
+      this.logger.log(
+        `Processing barcode metalization check - barcodeId: ${barcodeID}, userId: ${userId}, file: ${
+          file.originalname
+        }, size: ${file.size} bytes, hasBuffer: ${!!file.buffer}`
+      );
+    } else {
+      this.logger.error(
+        `No file provided for metalization check - barcodeId: ${barcodeID}, userId: ${userId}`
+      );
+    }
+
     let isM;
     try {
       isM = await isMetalised(file);

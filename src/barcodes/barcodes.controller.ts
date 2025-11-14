@@ -10,6 +10,7 @@ import {
   ClassSerializerInterceptor,
   UploadedFile,
   Res,
+  Logger,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 
@@ -31,6 +32,7 @@ import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
 @UseFilters(new HttpExceptionFilter())
 @Controller("api/v1/barcodes")
 export class BarcodesController {
+  private readonly logger = new Logger(BarcodesController.name);
   constructor(private barcodeService: BarcodesService) {}
 
   // @Roles(UserRole.ADMIN)
@@ -44,6 +46,20 @@ export class BarcodesController {
     @UploadedFile() file: Express.Multer.File,
     @GetCurrentUser() user: any
   ) {
+    if (file) {
+      this.logger.log(
+        `Image uploaded - filename: ${file.originalname}, mimetype: ${
+          file.mimetype
+        }, size: ${file.size} bytes, buffer: ${
+          file.buffer ? "present" : "missing"
+        }`
+      );
+    } else {
+      this.logger.warn(
+        `No image file uploaded for barcode: ${consumeBarcodeDto.code}, userId: ${user.userId}`
+      );
+    }
+
     const userId: number = user.userId;
     const barcode = await this.barcodeService.consumeBarcode(
       consumeBarcodeDto.code,
