@@ -1,7 +1,7 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
 import { join } from "path";
 import * as serveStatic from "serve-static";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +15,7 @@ async function bootstrap() {
   });
 
   app.use(serveStatic(join(__dirname, "..", "web")));
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 }
 bootstrap();
