@@ -18,7 +18,7 @@ import { TransitionEntity } from "../entities/transitions.entity";
 
 @Injectable()
 export class MtnService {
-  private bankId: string;
+  // private bankId: string;
   private mtnPassword: string;
   private mtnUserName: string;
   private mtnDealerCode: string;
@@ -34,7 +34,7 @@ export class MtnService {
     private readonly amountTypesRepo: Repository<AmountTypesEntity>,
     private readonly userService: UsersService
   ) {
-    this.bankId = this.configService.get<string>("MTN_BANK_ID");
+    // this.bankId = this.configService.get<string>("MTN_BANK_ID");
     this.mtnPassword = this.configService.get<string>("MTN_PASSWORD");
     this.mtnUserName = this.configService.get<string>("MTN_USER_NAME");
     this.mtnDealerCode = this.configService.get<string>("MTN_DEALER_CODE");
@@ -159,85 +159,85 @@ export class MtnService {
     }
   }
 
-  async recharge(mobile: string, amount: number) {
-    await this.getToken();
-    const user = await this.userService.findOne(mobile);
-    const date = new Date();
-    let dateString = "YYYYMMDDhhmmss";
-    dateString = dateString.replace(
-      "YYYY",
-      date.getFullYear().toString().slice(-2)
-    );
-    dateString = dateString.replace("MM", (date.getMonth() + 1).toString());
-    dateString = dateString.replace("DD", date.getDate().toString());
-    dateString = dateString.replace("hh", date.getHours().toString());
-    dateString = dateString.replace("mm", date.getMinutes().toString());
-    dateString = dateString.replace("ss", date.getSeconds().toString());
+  // async recharge(mobile: string, amount: number) {
+  //   await this.getToken();
+  //   const user = await this.userService.findOne(mobile);
+  //   const date = new Date();
+  //   let dateString = "YYYYMMDDhhmmss";
+  //   dateString = dateString.replace(
+  //     "YYYY",
+  //     date.getFullYear().toString().slice(-2)
+  //   );
+  //   dateString = dateString.replace("MM", (date.getMonth() + 1).toString());
+  //   dateString = dateString.replace("DD", date.getDate().toString());
+  //   dateString = dateString.replace("hh", date.getHours().toString());
+  //   dateString = dateString.replace("mm", date.getMinutes().toString());
+  //   dateString = dateString.replace("ss", date.getSeconds().toString());
 
-    const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
-      where: { amount },
-    });
-    if (!amountType)
-      throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
+  //   const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
+  //     where: { amount },
+  //   });
+  //   if (!amountType)
+  //     throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
 
-    const transition = this.transitionRepo.create({
-      amount: amountType,
-      user: user,
-    });
+  //   const transition = this.transitionRepo.create({
+  //     amount: amountType,
+  //     user: user,
+  //   });
 
-    await this.transitionRepo.save(transition);
-    const transitionId: string = "fa" + transition.transition_id;
+  //   await this.transitionRepo.save(transition);
+  //   const transitionId: string = "fa" + transition.transition_id;
 
-    const newPoints: number = user.points - amount;
-    if (newPoints < 0)
-      throw new HttpException(
-        "User Doesn't Have Enough Points",
-        HttpStatus.BAD_REQUEST
-      );
+  //   const newPoints: number = user.points - amount;
+  //   if (newPoints < 0)
+  //     throw new HttpException(
+  //       "User Doesn't Have Enough Points",
+  //       HttpStatus.BAD_REQUEST
+  //     );
 
-    const data = new URLSearchParams();
-    data.append(
-      "inputObj",
-      `{"bankId":"${this.bankId}","password":"${this.mtnPassword}","gsmNumber":"${mobile}" ,"amount":"${amount}" ,"transactionId":"${transitionId}" ,"transactionDate":"${dateString}",}`
-    );
-    if (user.is_pre_paid === true) {
-      const response = await this.sendRequestWithToken(
-        "https://Services.mtnsyr.com:9090/rechargePrepaidLine",
-        data
-      );
+  //   const data = new URLSearchParams();
+  //   data.append(
+  //     "inputObj",
+  //     `{"bankId":"${this.bankId}","password":"${this.mtnPassword}","gsmNumber":"${mobile}" ,"amount":"${amount}" ,"transactionId":"${transitionId}" ,"transactionDate":"${dateString}",}`
+  //   );
+  //   if (user.is_pre_paid === true) {
+  //     const response = await this.sendRequestWithToken(
+  //       "https://Services.mtnsyr.com:9090/rechargePrepaidLine",
+  //       data
+  //     );
 
-      if (response.data.result === "True") {
-        await this.transitionRepo.update(
-          {
-            transition_id: transition.transition_id,
-          },
-          { is_accepted: true, is_success: true }
-        );
-        await this.userService.updateUserPoints(user.user_id, newPoints);
-        return { amount };
-      }
+  //     if (response.data.result === "True") {
+  //       await this.transitionRepo.update(
+  //         {
+  //           transition_id: transition.transition_id,
+  //         },
+  //         { is_accepted: true, is_success: true }
+  //       );
+  //       await this.userService.updateUserPoints(user.user_id, newPoints);
+  //       return { amount };
+  //     }
 
-      throw new InternalServerErrorException();
-    }
-    if (user.is_pre_paid === false) {
-      const response = await this.sendRequestWithToken(
-        "https://Services.mtnsyr.com:9090/payPostpaidInvoice",
-        data
-      );
+  //     throw new InternalServerErrorException();
+  //   }
+  //   if (user.is_pre_paid === false) {
+  //     const response = await this.sendRequestWithToken(
+  //       "https://Services.mtnsyr.com:9090/payPostpaidInvoice",
+  //       data
+  //     );
 
-      if (response.data.result === "True") {
-        await this.transitionRepo.update(
-          {
-            transition_id: transition.transition_id,
-          },
-          { is_accepted: true, is_success: true }
-        );
-        await this.userService.updateUserPoints(user.user_id, newPoints);
-        return { amount };
-      }
-      throw new InternalServerErrorException();
-    }
-  }
+  //     if (response.data.result === "True") {
+  //       await this.transitionRepo.update(
+  //         {
+  //           transition_id: transition.transition_id,
+  //         },
+  //         { is_accepted: true, is_success: true }
+  //       );
+  //       await this.userService.updateUserPoints(user.user_id, newPoints);
+  //       return { amount };
+  //     }
+  //     throw new InternalServerErrorException();
+  //   }
+  // }
 
   async sendRequestWithToken(
     url: string,
