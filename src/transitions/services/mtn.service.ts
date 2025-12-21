@@ -226,7 +226,7 @@ export class MtnService {
     }
 
     this.logger.warn(
-      `Unexpected response from MTN API - Result: ${JSON.parse(
+      `Unexpected response from MTN API - Result: ${JSON.stringify(
         response.data
       )}, Error: ${response.data.Error || "N/A"}, mobile: ${mobile}`
     );
