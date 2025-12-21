@@ -1,3 +1,5 @@
+import { Exclude } from "class-transformer";
+import { AgentsEntity } from "src/agents/entities/agents.entity";
 import { UserEntity } from "src/users/users.entity";
 import {
   Column,
@@ -9,8 +11,6 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { AwardEntity } from "./award.entity";
-import { Exclude } from "class-transformer";
-import { AgentsEntity } from "src/agents/entities/agents.entity";
 
 @Entity({ name: "barcodes" })
 export class BarcodesEntity {
@@ -40,6 +40,9 @@ export class BarcodesEntity {
 
   @Column({ default: false })
   readonly immideate_redeem: boolean;
+
+  @Column({ default: true })
+  readonly isMetalized: boolean;
 
   @ManyToOne(() => AgentsEntity, (agent) => agent.barcodes)
   @JoinColumn({ name: "agent_id" })

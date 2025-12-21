@@ -1,12 +1,12 @@
-import { Injectable, HttpException, HttpStatus, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { BarcodesEntity } from "../entities/barcodes.entity";
-import { Repository } from "typeorm";
-import { AwardService } from "./award.service";
+import { isMetalised } from "src/gateway/ai/ai.gateway";
 import { UsersService } from "src/users/users.service";
+import { Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import * as xlsx from "xlsx-populate";
-import { isMetalised } from "src/gateway/ai/ai.gateway";
+import { BarcodesEntity } from "../entities/barcodes.entity";
+import { AwardService } from "./award.service";
 @Injectable()
 export class BarcodesService {
   private readonly logger = new Logger("Barcode Service");
@@ -45,38 +45,41 @@ export class BarcodesService {
       );
     }
 
-    if (file) {
-      this.logger.log(
-        `Processing barcode metalization check - barcodeId: ${barcodeID}, userId: ${userId}, file: ${
-          file.originalname
-        }, size: ${file.size} bytes, hasBuffer: ${!!file.buffer}`
-      );
-    } else {
-      this.logger.error(
-        `No file provided for metalization check - barcodeId: ${barcodeID}, userId: ${userId}`
-      );
-    }
+    // Only check metalization if the barcode is marked as metalized
+    if (findBarcode.isMetalized === true) {
+      if (file) {
+        this.logger.log(
+          `Processing barcode metalization check - barcodeId: ${barcodeID}, userId: ${userId}, file: ${
+            file.originalname
+          }, size: ${file.size} bytes, hasBuffer: ${!!file.buffer}`
+        );
+      } else {
+        this.logger.error(
+          `No file provided for metalization check - barcodeId: ${barcodeID}, userId: ${userId}`
+        );
+      }
 
-    let isM;
-    try {
-      isM = await isMetalised(file);
-      this.logger.log(JSON.stringify(isM));
-    } catch (error) {
-      this.logger.error(
-        `Failed to check if barcode is metalized: ${error.message}`,
-        error.stack
-      );
-      throw new HttpException(
-        "فشل في التحقق من صحة الصورة. يرجى المحاولة مرة أخرى",
-        HttpStatus.SERVICE_UNAVAILABLE
-      );
-    }
+      let isM;
+      try {
+        isM = await isMetalised(file);
+        this.logger.log(JSON.stringify(isM));
+      } catch (error) {
+        this.logger.error(
+          `Failed to check if barcode is metalized: ${error.message}`,
+          error.stack
+        );
+        throw new HttpException(
+          "فشل في التحقق من صحة الصورة. يرجى المحاولة مرة أخرى",
+          HttpStatus.SERVICE_UNAVAILABLE
+        );
+      }
 
-    if (!isM.is_metalized) {
-      throw new HttpException(
-        "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
-        HttpStatus.BAD_REQUEST
-      );
+      if (!isM.is_metalized) {
+        throw new HttpException(
+          "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
+          HttpStatus.BAD_REQUEST
+        );
+      }
     }
 
     const user = await this.userService.findUserById(userId);
@@ -213,7 +216,8 @@ export class BarcodesService {
   async generateBarcodes(
     count: number,
     agent_id: number,
-    award_id: number
+    award_id: number,
+    isMetalized?: boolean
   ): Promise<string> {
     const rowsToInsert = [];
 
@@ -222,6 +226,7 @@ export class BarcodesService {
         barcode_id: uuidv4(),
         agent: { agent_id },
         award: { award_id },
+        isMetalized: isMetalized !== undefined ? isMetalized : true,
       });
       rowsToInsert.push(newRow);
     }

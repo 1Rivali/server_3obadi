@@ -1,16 +1,16 @@
 import {
-  Controller,
-  UseGuards,
-  Post,
   Body,
-  ValidationPipe,
-  Get,
-  UseFilters,
-  UseInterceptors,
   ClassSerializerInterceptor,
-  UploadedFile,
-  Res,
+  Controller,
+  Get,
   Logger,
+  Post,
+  Res,
+  UploadedFile,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+  ValidationPipe,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 
@@ -21,12 +21,9 @@ import { ConsumeBarcodeDto } from "./dto";
 import { BarcodesService } from "./services/barcodes.service";
 
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
-import { GetCurrentUser } from "src/utils";
 import { HttpExceptionFilter } from "src/http-exception.filter";
-import { UserRole } from "src/users/users.entity";
+import { GetCurrentUser } from "src/utils";
 import { GenerateBarcodeDto } from "./dto/generate-barcode.dto";
-import { Roles } from "src/auth/roles/roles.decorator";
-import { RolesGuard } from "src/auth/roles/roles.guard";
 import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
 
 @UseFilters(new HttpExceptionFilter())
@@ -46,20 +43,6 @@ export class BarcodesController {
     @UploadedFile() file: Express.Multer.File,
     @GetCurrentUser() user: any
   ) {
-    if (file) {
-      this.logger.log(
-        `Image uploaded - filename: ${file.originalname}, mimetype: ${
-          file.mimetype
-        }, size: ${file.size} bytes, buffer: ${
-          file.buffer ? "present" : "missing"
-        }`
-      );
-    } else {
-      this.logger.warn(
-        `No image file uploaded for barcode: ${consumeBarcodeDto.code}, userId: ${user.userId}`
-      );
-    }
-
     const userId: number = user.userId;
     const barcode = await this.barcodeService.consumeBarcode(
       consumeBarcodeDto.code,
@@ -115,7 +98,8 @@ export class BarcodesController {
     const fileName = await this.barcodeService.generateBarcodes(
       generateBarcodesDto.count,
       generateBarcodesDto.agent_id,
-      generateBarcodesDto.award_id
+      generateBarcodesDto.award_id,
+      generateBarcodesDto.isMetalized
     );
 
     const filePath = join(process.cwd(), fileName);

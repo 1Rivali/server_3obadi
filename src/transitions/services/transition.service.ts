@@ -23,6 +23,12 @@ export class TransitionService {
     });
   }
 
+  async findAllAmountTypes(): Promise<AmountTypesEntity[]> {
+    return await this.amountTypesRepo.find({
+      where: { is_active: true },
+    });
+  }
+
   async fetchPreviousTransitions(userId: number): Promise<TransitionEntity[]> {
     const transitionsList = [];
     const transitions: TransitionEntity[] = await this.transitionRepo.find({

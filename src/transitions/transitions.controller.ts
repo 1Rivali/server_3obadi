@@ -82,4 +82,10 @@ export class TransitionsController {
       },
     };
   }
+
+  @Get("amount-types")
+  async getAllAmountTypes() {
+    const amountTypes = await this.transitionServices.findAllAmountTypes();
+    return { data: amountTypes };
+  }
 }
