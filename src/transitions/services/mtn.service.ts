@@ -226,9 +226,9 @@ export class MtnService {
     }
 
     this.logger.warn(
-      `Unexpected response from MTN API - Result: ${response.data}, Error: ${
-        response.data.Error || "N/A"
-      }, mobile: ${mobile}`
+      `Unexpected response from MTN API - Result: ${JSON.parse(
+        response.data
+      )}, Error: ${response.data.Error || "N/A"}, mobile: ${mobile}`
     );
   }
 
