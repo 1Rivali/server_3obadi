@@ -16,6 +16,7 @@ import { UsersService } from "src/users/users.service";
 import { GetCurrentUser } from "src/utils";
 import { StartTransitionDto } from "./dto/start-transition.dto";
 
+import { AmountTypesEntity } from "./entities/amount-types.entity";
 import { MtnService } from "./services/mtn.service";
 import { SyriatelService } from "./services/syriatel.service";
 import { TransitionService } from "./services/transition.service";
@@ -39,9 +40,8 @@ export class TransitionsController {
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
-    const amountType = await this.transitionServices.findAmountType(
-      transitionDto.amount
-    );
+    const amountType: AmountTypesEntity =
+      await this.transitionServices.findAmountType(transitionDto.amount);
 
     if (user.sim_provider === SimProviderEnum.SYRIATEL) {
       const isPrepaid = await this.syriatelService.checkType(userMobile, user);
@@ -50,7 +50,7 @@ export class TransitionsController {
       }
       return await this.syriatelService.recharge(
         userMobile,
-        amountType.syr_id,
+        amountType,
         transitionDto.location
       );
     }
@@ -60,7 +60,7 @@ export class TransitionsController {
       // if (isPostpaid === false) {
       //   await this.userService.setUserPostPaid(user.user_id);
       // }
-      return await this.mtnService.rechargeV2(userMobile, amountType.mtn_id);
+      return await this.mtnService.rechargeV2(userMobile, amountType);
     }
   }
   @UseGuards(JwtAuthGuard)

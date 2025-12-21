@@ -120,24 +120,21 @@ export class SyriatelService {
     return true;
   }
 
-  async recharge(mobile: string, amount: number, location: string) {
+  async recharge(mobile: string, amount: AmountTypesEntity, location: string) {
     const token = await this.getToken();
     const user = await this.userService.findOne(mobile);
-    const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
-      where: { amount },
-    });
-    if (!amountType)
+    if (!amount)
       throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
 
     const transition = this.transitionRepo.create({
-      amount: amountType,
+      amount: amount,
       user: user,
     });
 
     await this.transitionRepo.save(transition);
     const transitionId: string = "fa" + transition.transition_id;
 
-    const newPoints: number = user.points - amount;
+    const newPoints: number = user.points - amount.amount;
     if (newPoints < 0)
       throw new HttpException(
         "User Doesn't Have Enough Points",
@@ -152,7 +149,7 @@ export class SyriatelService {
         location: location,
         a_party_ip: this.ip,
         national_id: this.nationalId,
-        voucherId: amount,
+        voucherId: amount.syr_id,
         channel: 2,
       };
       const agent = new https.Agent({
@@ -184,7 +181,7 @@ export class SyriatelService {
         );
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount };
+        return { amount: amount.syr_id };
       }
       throw new InternalServerErrorException();
     }
@@ -196,7 +193,7 @@ export class SyriatelService {
         location: location,
         a_party_ip: this.ip,
         national_id: this.nationalId,
-        amount: amount,
+        amount: amount.syr_id,
         channel: 1,
       };
 
@@ -223,7 +220,7 @@ export class SyriatelService {
         );
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount };
+        return { amount: amount.syr_id };
       }
       throw new InternalServerErrorException();
     }

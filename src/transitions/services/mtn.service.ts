@@ -97,23 +97,21 @@ export class MtnService {
   //   return false;
   // }
 
-  async rechargeV2(mobile: string, amount: number) {
+  async rechargeV2(mobile: string, amount: AmountTypesEntity) {
     await this.getToken();
     const user = await this.userService.findOne(mobile);
-    const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
-      where: { amount },
-    });
-    if (!amountType)
+
+    if (!amount)
       throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
 
     const transition = this.transitionRepo.create({
-      amount: amountType,
+      amount: amount,
       user: user,
     });
 
     await this.transitionRepo.save(transition);
     const transitionId: string = "fa" + transition.transition_id;
-    const newPoints: number = user.points - amount;
+    const newPoints: number = user.points - amount.amount;
     if (newPoints < 0)
       throw new HttpException(
         "User Doesn't Have Enough Points",
@@ -124,7 +122,7 @@ export class MtnService {
       userName: this.mtnUserName,
       DealerCode: this.mtnDealerCode,
       DealerPass: this.mtnDealerPassword,
-      Amount: amount,
+      Amount: amount.mtn_id,
       TargetGSM: mobile,
       Type: simType,
       Distributor_Trx_Id: transitionId,
@@ -139,7 +137,7 @@ export class MtnService {
       true
     );
     if (response.data.Result === "True") {
-      return { amount };
+      return { amount: amount.mtn_id };
     } else if (
       response.data.Result === "False" &&
       response.data.Error === "30004"
@@ -151,7 +149,7 @@ export class MtnService {
         true
       );
       if (response.data.Result === "True") {
-        return { amount };
+        return { amount: amount.mtn_id };
       }
       if (response.data.Result === "False" && response.data.Error === "30004") {
         throw new InternalServerErrorException();
