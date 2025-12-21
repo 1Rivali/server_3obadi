@@ -41,7 +41,7 @@ export class MtnService {
     this.mtnDealerPassword = this.configService.get<string>(
       "MTN_DEALER_PASSWORD"
     );
-    this.ipAdrr = this.configService.get<string>("IP_ADRR");
+    this.ipAdrr = this.configService.get<string>("IP");
   }
   async getToken(): Promise<string> {
     const cachedToken: string = await this.cacheManager.get<string>("token");
