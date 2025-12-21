@@ -24,7 +24,7 @@ export class MtnService {
   private mtnDealerCode: string;
   private mtnDealerPassword: string;
   private ipAdrr: string;
-
+  private mtnDistributorCode: string;
   constructor(
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -41,6 +41,9 @@ export class MtnService {
     this.mtnDealerPassword = this.configService.get<string>(
       "MTN_DEALER_PASSWORD"
     );
+    this.mtnDistributorCode = this.configService.get<string>(
+      "MTN_DISTRIBUTOR_CODE"
+    );
     this.ipAdrr = this.configService.get<string>("IP");
   }
   async getToken(): Promise<string> {
@@ -53,14 +56,14 @@ export class MtnService {
 
     data.append(
       "inputObj",
-      `{"bankId":"${this.bankId}","password":"${this.mtnPassword}"}`
+      `{"userName":"${this.mtnUserName}","password":"${this.mtnPassword}","DistributorCode":"${this.mtnDistributorCode}"}`
     );
     const agent = new https.Agent({
       rejectUnauthorized: false,
     });
     const config = {
       method: "post",
-      url: "https://services.mtnsyr.com:985/authenticateDistributor",
+      url: "https://servicestest.mtnsyr.com:985/authenticateDistributor",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
