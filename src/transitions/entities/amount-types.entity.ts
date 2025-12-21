@@ -18,6 +18,12 @@ export class AmountTypesEntity {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({unique: true})
+  syr_id: number
+
+  @Column({unique: true})
+  mtn_id: number
+
   @OneToMany(() => TransitionEntity, (transitions) => transitions.amount)
   transitions: TransitionEntity[];
 

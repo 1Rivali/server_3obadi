@@ -1,25 +1,30 @@
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import {
-  Injectable,
-  InternalServerErrorException,
   HttpException,
   HttpStatus,
   Inject,
+  Injectable,
+  InternalServerErrorException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { TransitionEntity } from "../entities/transitions.entity";
 import { InjectRepository } from "@nestjs/typeorm";
+import axios from "axios";
+import { Cache } from "cache-manager";
+import * as https from "https";
+import { UsersService } from "src/users/users.service";
 import { Repository } from "typeorm";
 import { AmountTypesEntity } from "../entities/amount-types.entity";
-import { UsersService } from "src/users/users.service";
-import * as https from "https";
-import axios from "axios";
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Cache } from "cache-manager";
+import { TransitionEntity } from "../entities/transitions.entity";
 
 @Injectable()
 export class MtnService {
   private bankId: string;
   private mtnPassword: string;
+  private mtnUserName: string;
+  private mtnDealerCode: string;
+  private mtnDealerPassword: string;
+  private ipAdrr: string;
+
   constructor(
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -31,6 +36,12 @@ export class MtnService {
   ) {
     this.bankId = this.configService.get<string>("MTN_BANK_ID");
     this.mtnPassword = this.configService.get<string>("MTN_PASSWORD");
+    this.mtnUserName = this.configService.get<string>("MTN_USER_NAME");
+    this.mtnDealerCode = this.configService.get<string>("MTN_DEALER_CODE");
+    this.mtnDealerPassword = this.configService.get<string>(
+      "MTN_DEALER_PASSWORD"
+    );
+    this.ipAdrr = this.configService.get<string>("IP_ADRR");
   }
   async getToken(): Promise<string> {
     const cachedToken: string = await this.cacheManager.get<string>("token");
@@ -49,7 +60,7 @@ export class MtnService {
     });
     const config = {
       method: "post",
-      url: "https://services.mtnsyr.com:9090/getToken",
+      url: "https://services.mtnsyr.com:985/authenticateDistributor",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -59,28 +70,90 @@ export class MtnService {
 
     const response = await axios(config);
 
-    if (response.data.errorDesc === "Operation Success") {
+    if (response.data.result === "True") {
       const token = response.data.data.token;
       await this.cacheManager.set("token", token);
       return token;
     }
   }
 
-  async checkNumberType(mobile: string) {
-    const data = new URLSearchParams();
-    data.append(
-      "inputObj",
-      `{"bankId":"${this.bankId}","password":"${this.mtnPassword}","gsmNumber":"${mobile}",}`
-    );
+  // async checkNumberType(mobile: string) {
+  //   const data = new URLSearchParams();
+  //   data.append(
+  //     "inputObj",
+  //     `{"bankId":"${this.bankId}","password":"${this.mtnPassword}","gsmNumber":"${mobile}",}`
+  //   );
 
+  //   const response = await this.sendRequestWithToken(
+  //     "https://Services.mtnsyr.com:9090/checkGSMType",
+  //     data
+  //   );
+  //   if (response.data.data.gsmType === "pre") {
+  //     return true;
+  //   }
+  //   return false;
+  // }
+
+  async rechargeV2(mobile: string, amount: number) {
+    await this.getToken();
+    const user = await this.userService.findOne(mobile);
+    const amountType: AmountTypesEntity = await this.amountTypesRepo.findOne({
+      where: { amount },
+    });
+    if (!amountType)
+      throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
+
+    const transition = this.transitionRepo.create({
+      amount: amountType,
+      user: user,
+    });
+
+    await this.transitionRepo.save(transition);
+    const transitionId: string = "fa" + transition.transition_id;
+    const newPoints: number = user.points - amount;
+    if (newPoints < 0)
+      throw new HttpException(
+        "User Doesn't Have Enough Points",
+        HttpStatus.BAD_REQUEST
+      );
+    let simType = "Prepaid";
+    const bodyData = {
+      userName: this.mtnUserName,
+      DealerCode: this.mtnDealerCode,
+      DealerPass: this.mtnDealerPassword,
+      Amount: amount,
+      TargetGSM: mobile,
+      Type: simType,
+      Distributor_Trx_Id: transitionId,
+      IP: this.ipAdrr,
+      GPS: "33.5132,36.2768",
+    };
+    const reqData = new URLSearchParams();
+    reqData.append("inputObj", JSON.stringify(bodyData));
     const response = await this.sendRequestWithToken(
-      "https://Services.mtnsyr.com:9090/checkGSMType",
-      data
+      "https://Servicestest.mtnsyr.com:985/Transfer",
+      reqData,
+      true
     );
-    if (response.data.data.gsmType === "pre") {
-      return true;
+    if (response.data.Result === "True") {
+      return { amount };
+    } else if (
+      response.data.Result === "False" &&
+      response.data.Error === "30004"
+    ) {
+      simType = "Postpaid";
+      const response = await this.sendRequestWithToken(
+        "https://Servicestest.mtnsyr.com:985/Transfer",
+        reqData,
+        true
+      );
+      if (response.data.Result === "True") {
+        return { amount };
+      }
+      if (response.data.Result === "False" && response.data.Error === "30004") {
+        throw new InternalServerErrorException();
+      }
     }
-    return false;
   }
 
   async recharge(mobile: string, amount: number) {
@@ -162,7 +235,12 @@ export class MtnService {
       throw new InternalServerErrorException();
     }
   }
-  async sendRequestWithToken(url: string, data: any): Promise<any> {
+
+  async sendRequestWithToken(
+    url: string,
+    data: URLSearchParams,
+    bodyToken: boolean = false
+  ): Promise<any> {
     const token = await this.getToken();
     const headers = {
       Authorization: `Bearer ${token}`,
@@ -170,6 +248,9 @@ export class MtnService {
     const agent = new https.Agent({
       rejectUnauthorized: false,
     });
+    if (bodyToken) {
+      this.updateBodyToken(data, token);
+    }
     const response = await axios({
       method: "post",
       url,
@@ -185,9 +266,32 @@ export class MtnService {
       const headers = {
         Authorization: `Bearer ${refreshedToken}`,
       };
-      const response = await axios({ method: "post", url, data, headers });
+      if (bodyToken) {
+        this.updateBodyToken(data, refreshedToken);
+      }
+      const response = await axios({
+        method: "post",
+        url,
+        data,
+        headers,
+        httpsAgent: agent,
+      });
       return response;
     }
     return response;
+  }
+
+  private updateBodyToken(data: URLSearchParams, token: string) {
+    const serialized = data.get("inputObj");
+    if (!serialized) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(serialized);
+      parsed.token = token;
+      data.set("inputObj", JSON.stringify(parsed));
+    } catch {
+      // If the body is not JSON, do nothing; caller provided malformed payload
+    }
   }
 }

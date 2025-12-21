@@ -1,18 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { TransitionEntity } from '../entities/transitions.entity';
-import { Repository } from 'typeorm';
-import { MtnService } from './mtn.service';
-import { UsersService } from 'src/users/users.service';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { UsersService } from "src/users/users.service";
+import { Repository } from "typeorm";
+import { AmountTypesEntity } from "../entities/amount-types.entity";
+import { TransitionEntity } from "../entities/transitions.entity";
+import { MtnService } from "./mtn.service";
 
 @Injectable()
 export class TransitionService {
   constructor(
     @InjectRepository(TransitionEntity)
     private readonly transitionRepo: Repository<TransitionEntity>,
+    @InjectRepository(AmountTypesEntity)
+    private readonly amountTypesRepo: Repository<AmountTypesEntity>,
     private readonly mtnService: MtnService,
-    private readonly userService: UsersService,
+    private readonly userService: UsersService
   ) {}
+
+  async findAmountType(amount: number): Promise<AmountTypesEntity> {
+    return await this.amountTypesRepo.findOne({
+      where: { amount_type_id: amount },
+    });
+  }
 
   async fetchPreviousTransitions(userId: number): Promise<TransitionEntity[]> {
     const transitionsList = [];

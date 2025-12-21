@@ -1,22 +1,23 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Post,
-  UseGuards,
-  ValidationPipe,
-  UseInterceptors,
-  ClassSerializerInterceptor,
   UseFilters,
+  UseGuards,
+  UseInterceptors,
+  ValidationPipe,
 } from "@nestjs/common";
-import { StartTransitionDto } from "./dto/start-transition.dto";
-import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
-import { GetCurrentUser } from "src/utils";
-import { SyriatelService } from "./services/syriatel.service";
-import { HttpExceptionFilter } from "src/http-exception.filter";
-import { UsersService } from "src/users/users.service";
-import { MtnService } from "./services/mtn.service";
-import { SimProviderEnum } from "src/users/users.entity";
 import { Get } from "@nestjs/common/decorators";
+import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
+import { HttpExceptionFilter } from "src/http-exception.filter";
+import { SimProviderEnum } from "src/users/users.entity";
+import { UsersService } from "src/users/users.service";
+import { GetCurrentUser } from "src/utils";
+import { StartTransitionDto } from "./dto/start-transition.dto";
+
+import { MtnService } from "./services/mtn.service";
+import { SyriatelService } from "./services/syriatel.service";
 import { TransitionService } from "./services/transition.service";
 
 @UseInterceptors(ClassSerializerInterceptor)
@@ -38,26 +39,28 @@ export class TransitionsController {
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
+    const amountType = await this.transitionServices.findAmountType(
+      transitionDto.amount
+    );
 
     if (user.sim_provider === SimProviderEnum.SYRIATEL) {
-      const simType = await this.syriatelService.checkType(userMobile, user);
-      if (simType === false) {
+      const isPrepaid = await this.syriatelService.checkType(userMobile, user);
+      if (isPrepaid === false) {
         await this.userService.setUserPostPaid(user.user_id);
       }
       return await this.syriatelService.recharge(
         userMobile,
-        transitionDto.amount,
-
+        amountType.syr_id,
         transitionDto.location
       );
     }
     if (user.sim_provider === SimProviderEnum.MTN) {
-      const simtype = await this.mtnService.checkNumberType(userMobile);
+      // const isPostpaid = await this.mtnService.checkNumberType(userMobile);
 
-      if (simtype === false) {
-        await this.userService.setUserPostPaid(user.user_id);
-      }
-      return await this.mtnService.recharge(userMobile, transitionDto.amount);
+      // if (isPostpaid === false) {
+      //   await this.userService.setUserPostPaid(user.user_id);
+      // }
+      return await this.mtnService.rechargeV2(userMobile, amountType.mtn_id);
     }
   }
   @UseGuards(JwtAuthGuard)
