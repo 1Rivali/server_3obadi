@@ -1,23 +1,23 @@
+import { CacheModule } from "@nestjs/cache-manager";
 import { MiddlewareConsumer, Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { UsersModule } from "./users/users.module";
-import { AuthModule } from "./auth/auth.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { UserEntity } from "./users/users.entity";
 import { ConfigModule } from "@nestjs/config";
-import { VerificationsModule } from "./verifications/verifications.module";
-import { MobileVerificationEntity } from "./verifications/entities/mobile-verification.entity";
-import { PasswordVerificationEntity } from "./verifications/entities/password-verification.entity";
-import { BarcodesModule } from "./barcodes/barcodes.module";
-import { BarcodesEntity } from "./barcodes/entities/barcodes.entity";
-import { AwardEntity } from "./barcodes/entities/award.entity";
-import { TransitionsModule } from "./transitions/transitions.module";
-import { TransitionEntity } from "./transitions/entities/transitions.entity";
-import { AmountTypesEntity } from "./transitions/entities/amount-types.entity";
+import { TypeOrmModule } from "@nestjs/typeorm";
 import { AgentsModule } from "./agents/agents.module";
 import { AgentsEntity } from "./agents/entities/agents.entity";
+import { AppController } from "./app.controller";
+import { AuthModule } from "./auth/auth.module";
+import { BarcodesModule } from "./barcodes/barcodes.module";
+import { AwardEntity } from "./barcodes/entities/award.entity";
+import { BarcodesEntity } from "./barcodes/entities/barcodes.entity";
+import { AmountTypesEntity } from "./transitions/entities/amount-types.entity";
+import { TransitionEntity } from "./transitions/entities/transitions.entity";
+import { TransitionsModule } from "./transitions/transitions.module";
+import { UserEntity } from "./users/users.entity";
+import { UsersModule } from "./users/users.module";
 import { LoggerMiddleware } from "./utils/logger/logger.middleware";
-import { CacheModule } from "@nestjs/cache-manager";
+import { MobileVerificationEntity } from "./verifications/entities/mobile-verification.entity";
+import { PasswordVerificationEntity } from "./verifications/entities/password-verification.entity";
+import { VerificationsModule } from "./verifications/verifications.module";
 
 @Module({
   imports: [
@@ -42,7 +42,7 @@ import { CacheModule } from "@nestjs/cache-manager";
       ],
       // autoLoadEntities: true,
       // Remove this in production
-      synchronize: false,
+      synchronize: true,
     }),
     UsersModule,
     AuthModule,
