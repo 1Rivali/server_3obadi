@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -18,6 +19,7 @@ import { TransitionEntity } from "../entities/transitions.entity";
 
 @Injectable()
 export class MtnService {
+  private readonly logger = new Logger(MtnService.name);
   // private bankId: string;
   private mtnPassword: string;
   private mtnUserName: string;
@@ -98,26 +100,56 @@ export class MtnService {
   // }
 
   async rechargeV2(mobile: string, amount: AmountTypesEntity) {
+    this.logger.log(
+      `Starting MTN rechargeV2 - mobile: ${mobile}, amountTypeId: ${amount?.amount_type_id}, amount: ${amount?.amount}, mtn_id: ${amount?.mtn_id}`
+    );
+
+    this.logger.log("Retrieving MTN authentication token...");
     await this.getToken();
+    this.logger.log("Token retrieved successfully");
+
+    this.logger.log(`Looking up user by mobile: ${mobile}`);
     const user = await this.userService.findOne(mobile);
+    this.logger.log(
+      `User found - userId: ${user.user_id}, points: ${user.points}, sim_provider: ${user.sim_provider}`
+    );
 
-    if (!amount)
+    if (!amount) {
+      this.logger.error("Invalid amount type provided");
       throw new HttpException("Invalid amount type", HttpStatus.BAD_REQUEST);
+    }
 
+    this.logger.log("Creating transition record...");
     const transition = this.transitionRepo.create({
       amount: amount,
       user: user,
     });
 
     await this.transitionRepo.save(transition);
+    this.logger.log(
+      `Transition created and saved - transitionId: ${transition.transition_id}`
+    );
+
     const transitionId: string = "fa" + transition.transition_id;
+    this.logger.log(`Generated transition ID: ${transitionId}`);
+
     const newPoints: number = user.points - amount.amount;
-    if (newPoints < 0)
+    this.logger.log(
+      `Calculating points - current: ${user.points}, amount to deduct: ${amount.amount}, new points: ${newPoints}`
+    );
+
+    if (newPoints < 0) {
+      this.logger.error(
+        `Insufficient points - user has ${user.points}, needs ${amount.amount}`
+      );
       throw new HttpException(
         "User Doesn't Have Enough Points",
         HttpStatus.BAD_REQUEST
       );
+    }
+
     let simType = "Prepaid";
+    this.logger.log(`Preparing recharge request - simType: ${simType}`);
     const bodyData = {
       userName: this.mtnUserName,
       DealerCode: this.mtnDealerCode,
@@ -129,32 +161,75 @@ export class MtnService {
       IP: this.ipAdrr,
       GPS: "33.5132,36.2768",
     };
+    this.logger.log(
+      `Request body prepared - Amount: ${amount.mtn_id}, TargetGSM: ${mobile}, Type: ${simType}, Distributor_Trx_Id: ${transitionId}`
+    );
+
     const reqData = new URLSearchParams();
     reqData.append("inputObj", JSON.stringify(bodyData));
+
+    this.logger.log(
+      `Sending Prepaid recharge request to MTN API for mobile: ${mobile}`
+    );
     const response = await this.sendRequestWithToken(
       "https://Servicestest.mtnsyr.com:985/Transfer",
       reqData,
       true
     );
+    this.logger.log(
+      `MTN API response received - Result: ${response.data.Result}, Error: ${
+        response.data.Error || "N/A"
+      }`
+    );
+
     if (response.data.Result === "True") {
+      this.logger.log(
+        `Prepaid recharge successful - mobile: ${mobile}, amount: ${amount.mtn_id}`
+      );
       return { amount: amount.mtn_id };
     } else if (
       response.data.Result === "False" &&
       response.data.Error === "30004"
     ) {
+      this.logger.log(
+        `Prepaid recharge failed with error 30004, retrying as Postpaid - mobile: ${mobile}`
+      );
       simType = "Postpaid";
+      bodyData.Type = simType;
+      reqData.set("inputObj", JSON.stringify(bodyData));
+      this.logger.log(
+        `Sending Postpaid recharge request to MTN API for mobile: ${mobile}`
+      );
       const response = await this.sendRequestWithToken(
         "https://Servicestest.mtnsyr.com:985/Transfer",
         reqData,
         true
       );
+      this.logger.log(
+        `MTN API response received (Postpaid) - Result: ${
+          response.data.Result
+        }, Error: ${response.data.Error || "N/A"}`
+      );
+
       if (response.data.Result === "True") {
+        this.logger.log(
+          `Postpaid recharge successful - mobile: ${mobile}, amount: ${amount.mtn_id}`
+        );
         return { amount: amount.mtn_id };
       }
       if (response.data.Result === "False" && response.data.Error === "30004") {
+        this.logger.error(
+          `Both Prepaid and Postpaid recharge attempts failed with error 30004 - mobile: ${mobile}, transitionId: ${transitionId}`
+        );
         throw new InternalServerErrorException();
       }
     }
+
+    this.logger.warn(
+      `Unexpected response from MTN API - Result: ${
+        response.data.Result
+      }, Error: ${response.data.Error || "N/A"}, mobile: ${mobile}`
+    );
   }
 
   // async recharge(mobile: string, amount: number) {
