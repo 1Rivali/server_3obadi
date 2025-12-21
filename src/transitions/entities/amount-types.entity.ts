@@ -4,10 +4,10 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-} from 'typeorm';
-import { TransitionEntity } from './transitions.entity';
+} from "typeorm";
+import { TransitionEntity } from "./transitions.entity";
 
-@Entity('amount_types')
+@Entity("amount_types")
 export class AmountTypesEntity {
   @PrimaryGeneratedColumn()
   amount_type_id: number;
@@ -18,11 +18,11 @@ export class AmountTypesEntity {
   @Column({ default: true })
   is_active: boolean;
 
-  @Column({unique: true})
-  syr_id: number
+  @Column({ unique: true })
+  syr_id: number;
 
-  @Column({unique: true})
-  mtn_id: number
+  @Column({ unique: true })
+  mtn_id: number;
 
   @OneToMany(() => TransitionEntity, (transitions) => transitions.amount)
   transitions: TransitionEntity[];
