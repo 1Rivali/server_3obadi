@@ -60,7 +60,7 @@ export class SyriatelService {
 
     const config = {
       method: "post",
-      url: "https://bulk.syriatel.com.sy/CorporateAPIs/auth/token",
+      url: "https://bulk.syriatel.com.sy/CorporateAPIs/api/auth/token",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
