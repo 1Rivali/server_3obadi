@@ -193,7 +193,7 @@ export class SyriatelService {
         location: location,
         a_party_ip: this.ip,
         national_id: this.nationalId,
-        amount: amount.syr_id,
+        amount: amount.mtn_id,
         channel: 1,
       };
 
