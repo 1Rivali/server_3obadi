@@ -2,6 +2,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Logger,
   Post,
   Req,
   UseFilters,
@@ -27,6 +28,8 @@ import { TransitionService } from "./services/transition.service";
 @UseFilters(new HttpExceptionFilter())
 @Controller("api/v1/transitions")
 export class TransitionsController {
+  private readonly logger = new Logger(TransitionsController.name);
+
   constructor(
     private readonly syriatelService: SyriatelService,
     private readonly userService: UsersService,
@@ -48,6 +51,11 @@ export class TransitionsController {
 
     // Extract client IP from request
     const clientIp = this.getClientIp(request);
+
+    // Log user location and IP
+    this.logger.log(
+      `Transition request - User: ${userMobile}, Location: ${transitionDto.location}, IP: ${clientIp}`
+    );
 
     if (user.sim_provider === SimProviderEnum.SYRIATEL) {
       const isPrepaid = await this.syriatelService.checkType(userMobile, user);
