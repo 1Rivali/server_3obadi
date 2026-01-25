@@ -99,7 +99,12 @@ export class MtnService {
   //   return false;
   // }
 
-  async rechargeV2(mobile: string, amount: AmountTypesEntity) {
+  async rechargeV2(
+    mobile: string,
+    amount: AmountTypesEntity,
+    clientIp: string,
+    location: string
+  ) {
     await this.getToken();
     const user = await this.userService.findOne(mobile);
 
@@ -119,6 +124,12 @@ export class MtnService {
         "User Doesn't Have Enough Points",
         HttpStatus.BAD_REQUEST
       );
+
+    // Use client IP from request, fallback to config IP if not provided
+    const ipToUse = clientIp || this.ipAdrr;
+    // Use provided location or fallback to default GPS coordinates
+    const gpsToUse = location || "33.5132,36.2768";
+
     let simType = "Prepaid";
     const bodyData = {
       userName: this.mtnUserName,
@@ -128,8 +139,8 @@ export class MtnService {
       TargetGSM: mobile,
       Type: simType,
       Distributor_Trx_Id: transitionId,
-      IP: this.ipAdrr,
-      GPS: "33.5132,36.2768",
+      IP: ipToUse,
+      GPS: gpsToUse,
     };
     const reqData = new URLSearchParams();
     reqData.append("inputObj", JSON.stringify(bodyData));

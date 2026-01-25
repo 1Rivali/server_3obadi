@@ -120,7 +120,12 @@ export class SyriatelService {
     return true;
   }
 
-  async recharge(mobile: string, amount: AmountTypesEntity, location: string) {
+  async recharge(
+    mobile: string,
+    amount: AmountTypesEntity,
+    location: string,
+    clientIp: string
+  ) {
     const token = await this.getToken();
     const user = await this.userService.findOne(mobile);
     if (!amount)
@@ -141,13 +146,16 @@ export class SyriatelService {
         HttpStatus.BAD_REQUEST
       );
 
+    // Use client IP from request, fallback to config IP if not provided
+    const ipToUse = clientIp || this.ip;
+
     if (user.is_pre_paid === true) {
       const data = {
         a_party_msisdn: this.aMobile,
         transactionId: transitionId,
         b_party_msisdn: mobile,
         location: location,
-        a_party_ip: this.ip,
+        a_party_ip: ipToUse,
         national_id: this.nationalId,
         voucherId: amount.syr_id,
         channel: 2,
@@ -191,7 +199,7 @@ export class SyriatelService {
         transactionId: transitionId,
         b_party_msisdn: mobile,
         location: location,
-        a_party_ip: this.ip,
+        a_party_ip: ipToUse,
         national_id: this.nationalId,
         amount: amount.mtn_id,
         channel: 1,

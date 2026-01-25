@@ -3,12 +3,14 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Post,
+  Req,
   UseFilters,
   UseGuards,
   UseInterceptors,
   ValidationPipe,
 } from "@nestjs/common";
 import { Get } from "@nestjs/common/decorators";
+import { Request } from "express";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
 import { HttpExceptionFilter } from "src/http-exception.filter";
 import { SimProviderEnum } from "src/users/users.entity";
@@ -36,12 +38,16 @@ export class TransitionsController {
   @Post("/start")
   async startPointsTransition(
     @Body(new ValidationPipe()) transitionDto: StartTransitionDto,
-    @GetCurrentUser() reqUser: any
+    @GetCurrentUser() reqUser: any,
+    @Req() request: Request
   ) {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
     const amountType: AmountTypesEntity =
       await this.transitionServices.findAmountType(transitionDto.amount);
+
+    // Extract client IP from request
+    const clientIp = this.getClientIp(request);
 
     if (user.sim_provider === SimProviderEnum.SYRIATEL) {
       const isPrepaid = await this.syriatelService.checkType(userMobile, user);
@@ -51,7 +57,8 @@ export class TransitionsController {
       return await this.syriatelService.recharge(
         userMobile,
         amountType,
-        transitionDto.location
+        transitionDto.location,
+        clientIp
       );
     }
     if (user.sim_provider === SimProviderEnum.MTN) {
@@ -60,7 +67,12 @@ export class TransitionsController {
       // if (isPostpaid === false) {
       //   await this.userService.setUserPostPaid(user.user_id);
       // }
-      return await this.mtnService.rechargeV2(userMobile, amountType);
+      return await this.mtnService.rechargeV2(
+        userMobile,
+        amountType,
+        clientIp,
+        transitionDto.location
+      );
     }
   }
   @UseGuards(JwtAuthGuard)
@@ -87,5 +99,26 @@ export class TransitionsController {
   async getAllAmountTypes() {
     const amountTypes = await this.transitionServices.findAllAmountTypes();
     return { data: amountTypes };
+  }
+
+  /**
+   * Extract client IP from request, handling proxies/load balancers
+   */
+  private getClientIp(request: Request): string {
+    // Check for forwarded IP (if behind proxy/load balancer)
+    const forwarded = request.headers["x-forwarded-for"] as string;
+    if (forwarded) {
+      // x-forwarded-for can contain multiple IPs, take the first one
+      return forwarded.split(",")[0].trim();
+    }
+
+    // Check for real IP header
+    const realIp = request.headers["x-real-ip"] as string;
+    if (realIp) {
+      return realIp;
+    }
+
+    // Fallback to Express's request.ip
+    return request.ip || request.socket.remoteAddress || "unknown";
   }
 }
