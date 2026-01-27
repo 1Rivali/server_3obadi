@@ -99,7 +99,7 @@ export class SyriatelService {
       a_party_ip: this.ip,
       national_id: this.nationalId,
       voucherId: 150,
-      channel: 2,
+      channel: 4,
     };
     const config = {
       method: "post",
@@ -158,7 +158,7 @@ export class SyriatelService {
         a_party_ip: ipToUse,
         national_id: this.nationalId,
         voucherId: amount.syr_id,
-        channel: 2,
+        channel: 4,
       };
       const agent = new https.Agent({
         rejectUnauthorized: false,
@@ -202,7 +202,7 @@ export class SyriatelService {
         a_party_ip: ipToUse,
         national_id: this.nationalId,
         amount: amount.mtn_id,
-        channel: 1,
+        channel: 4,
       };
 
       const agent = new https.Agent({
