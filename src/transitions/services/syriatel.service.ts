@@ -157,7 +157,7 @@ export class SyriatelService {
         location: location,
         a_party_ip: ipToUse,
         national_id: this.nationalId,
-        voucherId: amount.syr_id,
+        voucherId: amount.provider_id,
         channel: 4,
       };
       const agent = new https.Agent({
@@ -189,7 +189,7 @@ export class SyriatelService {
         );
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount: amount.syr_id };
+        return { amount: amount.provider_id };
       }
       throw new InternalServerErrorException();
     }
@@ -201,7 +201,7 @@ export class SyriatelService {
         location: location,
         a_party_ip: ipToUse,
         national_id: this.nationalId,
-        amount: amount.mtn_id,
+        amount: amount.provider_id,
         channel: 4,
       };
 
@@ -228,7 +228,7 @@ export class SyriatelService {
         );
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount: amount.syr_id };
+        return { amount: amount.provider_id };
       }
       throw new InternalServerErrorException();
     }

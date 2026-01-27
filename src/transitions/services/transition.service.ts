@@ -5,6 +5,7 @@ import { Repository } from "typeorm";
 import { AmountTypesEntity } from "../entities/amount-types.entity";
 import { TransitionEntity } from "../entities/transitions.entity";
 import { MtnService } from "./mtn.service";
+import { SimProviderEnum } from "src/users/users.entity";
 
 @Injectable()
 export class TransitionService {
@@ -17,15 +18,20 @@ export class TransitionService {
     private readonly userService: UsersService
   ) {}
 
-  async findAmountType(amount: number): Promise<AmountTypesEntity> {
+  async findAmountType(
+    amount: number,
+    provider: SimProviderEnum
+  ): Promise<AmountTypesEntity> {
     return await this.amountTypesRepo.findOne({
-      where: { amount_type_id: amount },
+      where: { amount_type_id: amount, provider: provider },
     });
   }
 
-  async findAllAmountTypes(): Promise<AmountTypesEntity[]> {
+  async findAllAmountTypes(
+    provider: SimProviderEnum
+  ): Promise<AmountTypesEntity[]> {
     return await this.amountTypesRepo.find({
-      where: { is_active: true },
+      where: { is_active: true, provider: provider },
     });
   }
 

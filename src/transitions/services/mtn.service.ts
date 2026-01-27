@@ -135,7 +135,7 @@ export class MtnService {
       userName: this.mtnUserName,
       DealerCode: this.mtnDealerCode,
       DealerPass: this.mtnDealerPassword,
-      Amount: amount.mtn_id,
+      Amount: amount.provider_id,
       TargetGSM: mobile,
       Type: simType,
       Distributor_Trx_Id: transitionId,
@@ -182,7 +182,7 @@ export class MtnService {
         // Update user points
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount: amount.mtn_id };
+        return { amount: amount.provider_id };
       }
       if (response.data.result === "False" && response.data.error === "30004") {
         throw new InternalServerErrorException();

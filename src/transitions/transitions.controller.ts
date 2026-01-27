@@ -2,6 +2,8 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  HttpException,
+  HttpStatus,
   Logger,
   Post,
   Req,
@@ -47,7 +49,17 @@ export class TransitionsController {
     const userMobile: string = reqUser.mobile;
     const user = await this.userService.findOne(userMobile);
     const amountType: AmountTypesEntity =
-      await this.transitionServices.findAmountType(transitionDto.amount);
+      await this.transitionServices.findAmountType(
+        transitionDto.amount,
+        user.sim_provider
+      );
+
+    if (!amountType) {
+      throw new HttpException(
+        "Invalid amount type for your provider",
+        HttpStatus.BAD_REQUEST
+      );
+    }
 
     // Extract client IP from request
     const clientIp = this.getClientIp(request);
@@ -103,9 +115,14 @@ export class TransitionsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get("amount-types")
-  async getAllAmountTypes() {
-    const amountTypes = await this.transitionServices.findAllAmountTypes();
+  async getAllAmountTypes(@GetCurrentUser() reqUser: any) {
+    const userMobile: string = reqUser.mobile;
+    const user = await this.userService.findOne(userMobile);
+    const amountTypes = await this.transitionServices.findAllAmountTypes(
+      user.sim_provider
+    );
     return { data: amountTypes };
   }
 
