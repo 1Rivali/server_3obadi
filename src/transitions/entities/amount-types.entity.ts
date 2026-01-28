@@ -19,7 +19,11 @@ export class AmountTypesEntity {
   @Column()
   provider_id: number;
 
-  @Column({ type: "enum", enum: SimProviderEnum, nullable: false })
+  @Column({ 
+    type: "enum", 
+    enum: ["sy", "mtn"],
+    nullable: false 
+  })
   provider: SimProviderEnum;
 
   @Column({ default: true })
