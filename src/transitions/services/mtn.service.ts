@@ -159,7 +159,7 @@ export class MtnService {
       // Update user points
       await this.userService.updateUserPoints(user.user_id, newPoints);
 
-      return { amount: amount.mtn_id };
+      return { amount: amount.provider_id };
     } else if (
       response.data.result === "False" &&
       response.data.error === "30004"
@@ -182,7 +182,7 @@ export class MtnService {
         // Update user points
         await this.userService.updateUserPoints(user.user_id, newPoints);
 
-        return { amount: amount.provider_id };
+        return { amount: amount.amount };
       }
       if (response.data.result === "False" && response.data.error === "30004") {
         throw new InternalServerErrorException();
