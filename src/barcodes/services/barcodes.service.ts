@@ -16,13 +16,29 @@ export class BarcodesService {
     private readonly userService: UsersService
   ) {}
 
+  private rejectConsumeBadRequest(
+    reason: string,
+    message: string,
+    context: Record<string, unknown> = {}
+  ): never {
+    this.logger.warn(
+      `barcodes/consume 400 [${reason}]: ${message} | ${JSON.stringify(context)}`
+    );
+    throw new HttpException(message, HttpStatus.BAD_REQUEST);
+  }
+
   async consumeBarcode(
     barcodeID: string,
     userId: number,
     file?: Express.Multer.File
   ) {
+    const trimmedCode = barcodeID?.trim() ?? "";
+    this.logger.log(
+      `barcodes/consume started | userId=${userId} codeLength=${trimmedCode.length} hasFile=${!!file}`
+    );
+
     const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
-      where: { barcode_id: barcodeID.trim() },
+      where: { barcode_id: trimmedCode },
       relations: {
         award: true,
         agent: true,
@@ -30,17 +46,29 @@ export class BarcodesService {
     });
 
     if (!findBarcode) {
-      throw new HttpException("هذا الباركود غير موجود", HttpStatus.BAD_REQUEST);
+      this.rejectConsumeBadRequest("BARCODE_NOT_FOUND", "هذا الباركود غير موجود", {
+        userId,
+        code: trimmedCode,
+      });
     }
 
     if (!findBarcode.winner) {
-      throw new HttpException("حظ أوفر", HttpStatus.BAD_REQUEST);
+      this.rejectConsumeBadRequest("NOT_A_WINNER", "حظ أوفر", {
+        userId,
+        code: trimmedCode,
+        winner: findBarcode.winner,
+      });
     }
 
     if (findBarcode.is_used) {
-      throw new HttpException(
+      this.rejectConsumeBadRequest(
+        "BARCODE_ALREADY_USED",
         "هذا الباركود مستخدم من قبل",
-        HttpStatus.BAD_REQUEST
+        {
+          userId,
+          code: trimmedCode,
+          usedAt: findBarcode.used_at,
+        }
       );
     }
 
@@ -72,10 +100,12 @@ export class BarcodesService {
         // For points, award_value is a number (points to add)
         const pointsToAdd = parseInt(findBarcode.award.award_value);
         if (isNaN(pointsToAdd) || pointsToAdd <= 0) {
-          throw new HttpException(
-            "Invalid points value",
-            HttpStatus.BAD_REQUEST
-          );
+          this.rejectConsumeBadRequest("INVALID_POINTS_VALUE", "Invalid points value", {
+            userId,
+            code: trimmedCode,
+            awardValue: findBarcode.award.award_value,
+            parsedPoints: pointsToAdd,
+          });
         }
         const newPoints = user.points + pointsToAdd;
         await this.userService.updateUserPoints(user.user_id, newPoints);
@@ -101,15 +131,21 @@ export class BarcodesService {
         break;
 
       default:
-        throw new HttpException(
+        this.rejectConsumeBadRequest(
+          "UNSUPPORTED_AWARD_TYPE",
           `Unsupported award type: ${findBarcode.award.award_type}`,
-          HttpStatus.BAD_REQUEST
+          {
+            userId,
+            code: trimmedCode,
+            awardType: findBarcode.award.award_type,
+            awardId: findBarcode.award.award_id,
+          }
         );
     }
 
     // Mark barcode as used
     await this.barcodeRepo.update(
-      { barcode_id: barcodeID },
+      { barcode_id: trimmedCode },
       { is_used: true, user: user }
     );
 

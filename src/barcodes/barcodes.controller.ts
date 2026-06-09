@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   Controller,
@@ -26,6 +27,27 @@ import { GetCurrentUser } from "src/utils";
 import { GenerateBarcodeDto } from "./dto/generate-barcode.dto";
 import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
 
+const consumeBarcodeValidationPipe = new ValidationPipe({
+  exceptionFactory: (errors) => {
+    const logger = new Logger(BarcodesController.name);
+    logger.warn(
+      `barcodes/consume 400 [INVALID_REQUEST_BODY]: validation failed | ${JSON.stringify(
+        {
+          errors: errors.map((e) => ({
+            field: e.property,
+            constraints: e.constraints,
+            value:
+              e.property === "code"
+                ? `${String(e.value ?? "").length} chars`
+                : e.value,
+          })),
+        }
+      )}`
+    );
+    return new BadRequestException(errors);
+  },
+});
+
 @UseFilters(new HttpExceptionFilter())
 @Controller("api/v1/barcodes")
 export class BarcodesController {
@@ -39,15 +61,24 @@ export class BarcodesController {
   @UseInterceptors(FileInterceptor("file"))
   @Post("/consume")
   async ConsumeBarcode(
-    @Body(new ValidationPipe()) consumeBarcodeDto: ConsumeBarcodeDto,
+    @Body(consumeBarcodeValidationPipe)
+    consumeBarcodeDto: ConsumeBarcodeDto,
     @GetCurrentUser() user: any,
     @UploadedFile() file?: Express.Multer.File
   ) {
     const userId: number = user.userId;
+    this.logger.log(
+      `barcodes/consume request | userId=${userId} codeLength=${consumeBarcodeDto.code?.length ?? 0} hasFile=${!!file}`
+    );
+
     const barcode = await this.barcodeService.consumeBarcode(
       consumeBarcodeDto.code,
       userId,
       file
+    );
+
+    this.logger.log(
+      `barcodes/consume success | userId=${userId} code=${consumeBarcodeDto.code} awardType=${barcode.award_type}`
     );
 
     return barcode;
