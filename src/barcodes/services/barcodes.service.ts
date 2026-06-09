@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { isMetalised } from "src/gateway/ai/ai.gateway";
 import { UsersService } from "src/users/users.service";
 import { Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
@@ -20,7 +19,7 @@ export class BarcodesService {
   async consumeBarcode(
     barcodeID: string,
     userId: number,
-    file: Express.Multer.File
+    file?: Express.Multer.File
   ) {
     const findBarcode: BarcodesEntity = await this.barcodeRepo.findOne({
       where: { barcode_id: barcodeID.trim() },
@@ -45,42 +44,17 @@ export class BarcodesService {
       );
     }
 
-    // Only check metalization if the barcode is marked as metalized
-    if (findBarcode.isMetalized === true) {
-      if (file) {
-        this.logger.log(
-          `Processing barcode metalization check - barcodeId: ${barcodeID}, userId: ${userId}, file: ${
-            file.originalname
-          }, size: ${file.size} bytes, hasBuffer: ${!!file.buffer}`
-        );
-      } else {
-        this.logger.error(
-          `No file provided for metalization check - barcodeId: ${barcodeID}, userId: ${userId}`
-        );
-      }
-
-      let isM;
-      try {
-        isM = await isMetalised(file);
-        this.logger.log(JSON.stringify(isM));
-      } catch (error) {
-        this.logger.error(
-          `Failed to check if barcode is metalized: ${error.message}`,
-          error.stack
-        );
-        throw new HttpException(
-          "فشل في التحقق من صحة الصورة. يرجى المحاولة مرة أخرى",
-          HttpStatus.SERVICE_UNAVAILABLE
-        );
-      }
-
-      if (!isM.is_metalized) {
-        throw new HttpException(
-          "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
-          HttpStatus.BAD_REQUEST
-        );
-      }
-    }
+    // Metalization image check is disabled while the app only sends the scanned code.
+    // Re-enable when the client uploads a photo again:
+    // if (findBarcode.isMetalized === true && file) {
+    //   const isM = await isMetalised(file);
+    //   if (!isM.is_metalized) {
+    //     throw new HttpException(
+    //       "الرجاء وضع الباركود داخل كيس الشيبس من الداخل",
+    //       HttpStatus.BAD_REQUEST
+    //     );
+    //   }
+    // }
 
     const user = await this.userService.findUserById(userId);
 

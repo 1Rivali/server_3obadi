@@ -40,7 +40,7 @@ export class BarcodesController {
   @Post("/consume")
   async ConsumeBarcode(
     @Body(new ValidationPipe()) consumeBarcodeDto: ConsumeBarcodeDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
     @GetCurrentUser() user: any
   ) {
     const userId: number = user.userId;
