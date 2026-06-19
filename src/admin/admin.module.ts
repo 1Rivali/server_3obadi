@@ -1,7 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ServeStaticModule } from "@nestjs/serve-static";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { join } from "path";
 import { AgentsEntity } from "src/agents/entities/agents.entity";
 import { AwardEntity } from "src/barcodes/entities/award.entity";
 import { BarcodesEntity } from "src/barcodes/entities/barcodes.entity";
@@ -14,13 +12,6 @@ import { AdminService } from "./admin.service";
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), "admin"),
-      serveRoot: "/admin",
-      serveStaticOptions: {
-        index: false,
-      },
-    }),
     TypeOrmModule.forFeature([
       UserEntity,
       BarcodesEntity,

@@ -13,6 +13,10 @@ async function bootstrap() {
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
   });
 
+  app.use(
+    "/admin",
+    serveStatic(join(process.cwd(), "admin"), { index: false })
+  );
   app.use(serveStatic(join(__dirname, "..", "web")));
 
   const port = process.env.PORT || 3000;
