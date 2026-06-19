@@ -1,9 +1,12 @@
 import { FormEvent, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { useI18n } from "../i18n/I18nContext";
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,47 +21,55 @@ export function LoginPage() {
     try {
       await login(mobile, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const message = err instanceof Error ? err.message : t("login.failed");
+      setError(
+        message === "Admin access required" ? t("login.adminRequired") : message
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-slate-900 to-slate-800 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-brand-gradient px-4">
+      <div className="absolute end-4 top-4">
+        <LanguageSwitcher variant="dark" />
+      </div>
+      <div className="w-full max-w-md rounded-2xl border border-brand-200/50 bg-white p-8 shadow-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">3tech Admin</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Sign in with your admin account
-          </p>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gradient text-xl font-bold text-white shadow-lg">
+            3
+          </div>
+          <h1 className="text-2xl font-bold text-brand-900">{t("login.title")}</h1>
+          <p className="mt-2 text-sm text-brand-700/70">{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Mobile Number
+            <label className="mb-1.5 block text-sm font-medium text-brand-900">
+              {t("login.mobile")}
             </label>
             <input
               type="text"
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
-              placeholder="9639XXXXXXXX"
+              placeholder={t("login.mobilePlaceholder")}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none ring-brand-500 focus:border-brand-500 focus:ring-2"
+              dir="ltr"
+              className="input-field py-2.5"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Password
+            <label className="mb-1.5 block text-sm font-medium text-brand-900">
+              {t("login.password")}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none ring-brand-500 focus:border-brand-500 focus:ring-2"
+              className="input-field py-2.5"
             />
           </div>
 
@@ -68,12 +79,8 @@ export function LoginPage() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-          >
-            {loading ? "Signing in..." : "Sign in"}
+          <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
+            {loading ? t("login.signingIn") : t("login.signIn")}
           </button>
         </form>
       </div>

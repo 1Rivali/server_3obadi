@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type AdminTransition, type Paginated } from "../api/client";
 import { Pagination } from "../components/Pagination";
+import { formatDate, formatNumber, useI18n } from "../i18n/I18nContext";
 
 export function TransitionsPage() {
+  const { t, locale } = useI18n();
   const [result, setResult] = useState<Paginated<AdminTransition> | null>(null);
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
@@ -13,9 +15,9 @@ export function TransitionsPage() {
       setResult(data);
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load transitions");
+      setError(err instanceof Error ? err.message : t("transitions.loadFailed"));
     }
-  }, [page]);
+  }, [page, t]);
 
   useEffect(() => {
     load();
@@ -24,10 +26,8 @@ export function TransitionsPage() {
   return (
     <div>
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Transitions</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Point redemption / mobile recharge history
-        </p>
+        <h2 className="page-title">{t("transitions.title")}</h2>
+        <p className="mt-1 text-sm text-brand-700/70">{t("transitions.subtitle")}</p>
       </div>
 
       {error && (
@@ -36,56 +36,72 @@ export function TransitionsPage() {
         </p>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+      <div className="card-surface mt-6">
+        <table className="min-w-full divide-y divide-brand-100 text-sm">
+          <thead className="bg-brand-50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">User</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Amount</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Provider</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Date</th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("transitions.colUser")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("transitions.colAmount")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("transitions.colProvider")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("transitions.colStatus")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("transitions.colDate")}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {!result ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  Loading...
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : result.data.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  No transitions found
+                  {t("transitions.noTransitions")}
                 </td>
               </tr>
             ) : (
-              result.data.map((t) => (
-                <tr key={t.transition_id} className="hover:bg-slate-50">
+              result.data.map((item) => (
+                <tr key={item.transition_id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{t.user_name ?? "—"}</p>
-                    <p className="text-xs text-slate-400">{t.user_mobile}</p>
+                    <p className="font-medium">{item.user_name ?? t("common.empty")}</p>
+                    <p className="text-xs text-slate-400" dir="ltr">
+                      {item.user_mobile}
+                    </p>
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    {t.amount?.toLocaleString() ?? "—"}
+                    {item.amount != null
+                      ? formatNumber(item.amount, locale)
+                      : t("common.empty")}
                   </td>
                   <td className="px-4 py-3 uppercase text-slate-500">
-                    {t.provider ?? "—"}
+                    {item.provider ?? t("common.empty")}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        t.is_success && t.is_accepted
+                        item.is_success && item.is_accepted
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {t.is_success && t.is_accepted ? "Success" : "Failed"}
+                      {item.is_success && item.is_accepted
+                        ? t("transitions.success")
+                        : t("transitions.failed")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-500">
-                    {new Date(t.sent_at).toLocaleString()}
+                    {formatDate(item.sent_at, locale)}
                   </td>
                 </tr>
               ))

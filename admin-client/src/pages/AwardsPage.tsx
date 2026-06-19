@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, type Award, type CreateAwardInput } from "../api/client";
+import { translateAwardType, useI18n } from "../i18n/I18nContext";
 
 const emptyForm: CreateAwardInput = {
   award_type: "points",
@@ -9,6 +10,7 @@ const emptyForm: CreateAwardInput = {
 };
 
 export function AwardsPage() {
+  const { t } = useI18n();
   const [awards, setAwards] = useState<Award[]>([]);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -22,7 +24,7 @@ export function AwardsPage() {
       setAwards(res.data);
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load awards");
+      setError(err instanceof Error ? err.message : t("awards.loadFailed"));
     }
   }
 
@@ -60,7 +62,7 @@ export function AwardsPage() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : t("awards.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -68,33 +70,28 @@ export function AwardsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Awards</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Manage prize types and values
-          </p>
+          <h2 className="page-title">{t("awards.title")}</h2>
+          <p className="mt-1 text-sm text-brand-700/70">{t("awards.subtitle")}</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-        >
-          Add Award
+        <button onClick={openCreate} className="btn-primary">
+          {t("awards.add")}
         </button>
       </div>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="mt-6 rounded-xl border border-brand-200/60 bg-white p-6 shadow-sm"
         >
-          <h3 className="font-semibold text-slate-900">
-            {editing ? "Edit Award" : "New Award"}
+          <h3 className="font-semibold text-brand-900">
+            {editing ? t("awards.editTitle") : t("awards.newTitle")}
           </h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Type
+                {t("awards.type")}
               </label>
               <select
                 value={form.award_type}
@@ -106,14 +103,14 @@ export function AwardsPage() {
                 }
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
-                <option value="points">Points</option>
-                <option value="discount">Discount</option>
-                <option value="physical">Physical</option>
+                <option value="points">{t("awards.typePoints")}</option>
+                <option value="discount">{t("awards.typeDiscount")}</option>
+                <option value="physical">{t("awards.typePhysical")}</option>
               </select>
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Value
+                {t("awards.value")}
               </label>
               <input
                 value={form.award_value}
@@ -124,7 +121,7 @@ export function AwardsPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Percentage (weight)
+                {t("awards.percentage")}
               </label>
               <input
                 type="number"
@@ -139,7 +136,7 @@ export function AwardsPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Description
+                {t("awards.description")}
               </label>
               <input
                 value={form.award_description}
@@ -155,16 +152,12 @@ export function AwardsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn-primary disabled:opacity-60"
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common.saving") : t("common.save")}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
+            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
+              {t("common.cancel")}
             </button>
           </div>
         </form>
@@ -176,23 +169,33 @@ export function AwardsPage() {
         </p>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+      <div className="card-surface mt-6">
+        <table className="min-w-full divide-y divide-brand-100 text-sm">
+          <thead className="bg-brand-50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Type</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Value</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Weight %</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500">Description</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-500" />
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("awards.colId")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("awards.colType")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("awards.colValue")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("awards.colWeight")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500">
+                {t("awards.colDescription")}
+              </th>
+              <th className="px-4 py-3 text-start font-medium text-slate-500" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {awards.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                  No awards configured
+                  {t("awards.noAwards")}
                 </td>
               </tr>
             ) : (
@@ -200,8 +203,8 @@ export function AwardsPage() {
                 <tr key={award.award_id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">{award.award_id}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                      {award.award_type}
+                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
+                      {translateAwardType(award.award_type, t)}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-medium">{award.award_value}</td>
@@ -212,9 +215,9 @@ export function AwardsPage() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => openEdit(award)}
-                      className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                      className="text-sm font-medium text-brand-600 hover:text-brand-800"
                     >
-                      Edit
+                      {t("common.edit")}
                     </button>
                   </td>
                 </tr>

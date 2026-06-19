@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, type Agent, type CreateAgentInput } from "../api/client";
+import { useI18n } from "../i18n/I18nContext";
 
 const emptyForm: CreateAgentInput = {
   agent_name: "",
@@ -8,6 +9,7 @@ const emptyForm: CreateAgentInput = {
 };
 
 export function AgentsPage() {
+  const { t } = useI18n();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -21,7 +23,7 @@ export function AgentsPage() {
       setAgents(res.data);
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load agents");
+      setError(err instanceof Error ? err.message : t("agents.loadFailed"));
     }
   }
 
@@ -58,7 +60,7 @@ export function AgentsPage() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : t("agents.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -66,33 +68,28 @@ export function AgentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Agents</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Manage partner agents and branding
-          </p>
+          <h2 className="page-title">{t("agents.title")}</h2>
+          <p className="mt-1 text-sm text-brand-700/70">{t("agents.subtitle")}</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-        >
-          Add Agent
+        <button onClick={openCreate} className="btn-primary">
+          {t("agents.add")}
         </button>
       </div>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="mt-6 rounded-xl border border-brand-200/60 bg-white p-6 shadow-sm"
         >
-          <h3 className="font-semibold text-slate-900">
-            {editing ? "Edit Agent" : "New Agent"}
+          <h3 className="font-semibold text-brand-900">
+            {editing ? t("agents.editTitle") : t("agents.newTitle")}
           </h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Name
+                {t("agents.name")}
               </label>
               <input
                 value={form.agent_name}
@@ -103,25 +100,27 @@ export function AgentsPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Logo URL
+                {t("agents.logoUrl")}
               </label>
               <input
                 value={form.agent_logo}
                 onChange={(e) => setForm({ ...form, agent_logo: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                dir="ltr"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                Primary Color
+                {t("agents.primaryColor")}
               </label>
               <input
                 value={form.agent_primary_color}
                 onChange={(e) =>
                   setForm({ ...form, agent_primary_color: e.target.value })
                 }
-                placeholder="#2563eb"
+                placeholder={t("agents.colorPlaceholder")}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                dir="ltr"
               />
             </div>
           </div>
@@ -129,16 +128,12 @@ export function AgentsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn-primary disabled:opacity-60"
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common.saving") : t("common.save")}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
+            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
+              {t("common.cancel")}
             </button>
           </div>
         </form>
@@ -153,21 +148,21 @@ export function AgentsPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {agents.length === 0 ? (
           <p className="col-span-full rounded-xl border border-dashed border-slate-300 py-12 text-center text-slate-400">
-            No agents configured
+            {t("agents.noAgents")}
           </p>
         ) : (
           agents.map((agent) => (
             <div
               key={agent.agent_id}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-brand-200/60 bg-white p-5 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-brand-900">
                     {agent.agent_name}
                   </h3>
                   <p className="mt-1 text-xs text-slate-400">
-                    ID: {agent.agent_id}
+                    {t("agents.idLabel", { id: agent.agent_id })}
                   </p>
                 </div>
                 {agent.agent_primary_color && (
@@ -178,15 +173,15 @@ export function AgentsPage() {
                 )}
               </div>
               {agent.agent_logo && (
-                <p className="mt-3 truncate text-xs text-slate-500">
+                <p className="mt-3 truncate text-xs text-slate-500" dir="ltr">
                   {agent.agent_logo}
                 </p>
               )}
               <button
                 onClick={() => openEdit(agent)}
-                className="mt-4 text-sm font-medium text-brand-600 hover:text-brand-700"
+                className="mt-4 text-sm font-medium text-brand-600 hover:text-brand-800"
               >
-                Edit
+                {t("common.edit")}
               </button>
             </div>
           ))
