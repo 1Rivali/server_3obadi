@@ -3,3 +3,5 @@ dist
 .env
 .eslintrc.js
 .prettierrc
+admin-client/node_modules
+admin-client/tsconfig.tsbuildinfo

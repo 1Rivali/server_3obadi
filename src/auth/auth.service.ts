@@ -31,7 +31,11 @@ export class AuthService {
         throw new UnauthorizedException("Credentials incorrect");
 
       return {
-        user,
+        user: {
+          name: user.name,
+          mobile: user.mobile,
+          role: user.role,
+        },
         token: this.genToken(
           user.user_id,
           user.mobile,

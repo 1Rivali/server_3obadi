@@ -22,7 +22,10 @@ import { ConsumeBarcodeDto } from "./dto";
 import { BarcodesService } from "./services/barcodes.service";
 
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
+import { Roles } from "src/auth/roles/roles.decorator";
+import { RolesGuard } from "src/auth/roles/roles.guard";
 import { HttpExceptionFilter } from "src/http-exception.filter";
+import { UserRole } from "src/users/users.entity";
 import { GetCurrentUser } from "src/utils";
 import { GenerateBarcodeDto } from "./dto/generate-barcode.dto";
 import { RedeemBarcodeByPhoneNumberDto } from "./dto/redeem-barcode-by-phone";
@@ -119,8 +122,8 @@ export class BarcodesController {
     return barcodes;
   }
 
-  // @Roles(UserRole.ADMIN)
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("/generate")
   async generateBarcodes(
     @Body(new ValidationPipe()) generateBarcodesDto: GenerateBarcodeDto,

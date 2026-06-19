@@ -18,6 +18,7 @@ import { LoggerMiddleware } from "./utils/logger/logger.middleware";
 import { MobileVerificationEntity } from "./verifications/entities/mobile-verification.entity";
 import { PasswordVerificationEntity } from "./verifications/entities/password-verification.entity";
 import { VerificationsModule } from "./verifications/verifications.module";
+import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { VerificationsModule } from "./verifications/verifications.module";
     BarcodesModule,
     TransitionsModule,
     AgentsModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })
